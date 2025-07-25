@@ -69,7 +69,7 @@ struct TaskRow: View {
                     
                     if let project = task.project {
                         HStack(spacing: 4) {
-                            Image(systemName: "folder")
+                            Image(systemName: project.icon)
                             Text(project.name.count > 10 ? String(project.name.prefix(10)) + "…" : project.name)
                                 .lineLimit(1)
                                 .truncationMode(.tail)

@@ -141,10 +141,11 @@ struct DailyAverageView: View {
 struct RangePicker: View {
     @Binding var selected: DailyAverageView.RangeType
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             ForEach(DailyAverageView.RangeType.allCases) { range in
                 Button(action: { selected = range }) {
                     Text(range.rawValue)
+                        .font(.caption)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 6)
                         .background(selected == range ? Color.accentColor.opacity(0.18) : Color.clear)

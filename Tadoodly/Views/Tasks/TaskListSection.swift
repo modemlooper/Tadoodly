@@ -27,50 +27,68 @@ struct TaskListSection: View {
     }
     
     var body: some View {
-        ScrollViewReader { proxy in
-            List {
-                ForEach(displayedTasks, id: \.id) { task in
-                    ZStack {
-                        TaskRowView(
-                            task: task,
-                            sortedTasks: displayedTasks,
-                            askDeleteConfirmation: askDeleteConfirmation
-                        )
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            router.navigate(Route.editTask(task))
+        if displayedTasks.isEmpty {
+            VStack(spacing: 16) {
+                Text("No tasks created.")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                Button(action: {
+                    router.navigate(Route.addTask)
+                }) {
+                    Text("Add Task")
+                        .font(.headline)
+                        .foregroundColor(.accent)
+                }
+                .buttonStyle(.plain)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(displayedTasks, id: \.id) { task in
+                        ZStack {
+                            TaskRowView(
+                                task: task,
+                                sortedTasks: displayedTasks,
+                                askDeleteConfirmation: askDeleteConfirmation
+                            )
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                router.navigate(Route.editTask(task))
+                            }
+                            .onTapGesture(count: 1) {
+                                router.navigate(Route.viewTask(task))
+                            }
                         }
-                        .onTapGesture(count: 1) {
-                            router.navigate(Route.viewTask(task))
-                        }
+                        .listRowInsets(.init(top: 1, leading: 0, bottom: 1, trailing: 0))
                     }
-                    .listRowInsets(.init(top: 1, leading: 0, bottom: 1, trailing: 0))
                 }
+                .animation(.default, value: displayedTasks)
+                .scrollIndicators(.hidden)
+                .onChange(of: selectedSortOption) { _, _ in
+                    if let firstId = displayedTasks.first?.id {
+                        proxy.scrollTo(firstId, anchor: .top)
+                    }
+                }
+                .onChange(of: showCompleted) { _, _ in
+                    if let firstId = displayedTasks.first?.id {
+                        proxy.scrollTo(firstId, anchor: .top)
+                    }
+                }
+                .listStyle(.plain)
+                .alert("Confirm Delete", isPresented: $showingDeleteConfirmation, actions: {
+                    Button("Delete", role: .destructive) {
+                        deleteTasks(offsets: pendingDeleteOffsets)
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingDeleteOffsets = []
+                    }
+                }, message: {
+                    Text("Are you sure you want to delete the selected task(s)?")
+                })
             }
-            .animation(.default, value: displayedTasks)
-            .scrollIndicators(.hidden)
-            .onChange(of: selectedSortOption) { _, _ in
-                if let firstId = displayedTasks.first?.id {
-                    proxy.scrollTo(firstId, anchor: .top)
-                }
-            }
-            .onChange(of: showCompleted) { _, _ in
-                if let firstId = displayedTasks.first?.id {
-                    proxy.scrollTo(firstId, anchor: .top)
-                }
-            }
-            .listStyle(.plain)
-            .alert("Confirm Delete", isPresented: $showingDeleteConfirmation, actions: {
-                Button("Delete", role: .destructive) {
-                    deleteTasks(offsets: pendingDeleteOffsets)
-                }
-                Button("Cancel", role: .cancel) {
-                    pendingDeleteOffsets = []
-                }
-            }, message: {
-                Text("Are you sure you want to delete the selected task(s)?")
-            })
         }
     }
     
