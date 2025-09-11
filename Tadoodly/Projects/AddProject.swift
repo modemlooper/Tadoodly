@@ -46,13 +46,26 @@ struct AddProject: View {
             }
             
         }
+        .alert("Are you sure you want to delete this project?", isPresented: $showingDeleteAlert, actions: {
+            Button("Delete", role: .destructive) {
+                if let project = project {
+                    modelContext.delete(project)
+                    try? modelContext.save()
+                    
+                }
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        })
         .toolbar {
             
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    handleCopyTap()
-                } label: {
-                    Label("Duplicate", systemImage: "document.on.document")
+            if project == nil {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        handleCopyTap()
+                    } label: {
+                        Label("Duplicate", systemImage: "document.on.document")
+                    }
                 }
             }
             

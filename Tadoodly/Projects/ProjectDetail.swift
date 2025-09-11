@@ -40,6 +40,7 @@ struct ProjectDetail: View {
                             Text(desc)
                                 .font(.body)
                                 .foregroundColor(.secondary)
+                                .padding(.top, 10)
                         }
                         
                     }
