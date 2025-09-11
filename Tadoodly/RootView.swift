@@ -18,6 +18,7 @@ struct AddProjectRoute: Hashable {
 
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
+
     @State private var pathTasks = NavigationPath()
     @State private var pathProjects = NavigationPath()
     @State private var pathStats = NavigationPath()

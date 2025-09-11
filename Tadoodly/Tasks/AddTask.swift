@@ -17,8 +17,6 @@ struct AddTask: View {
     
     var task: UserTask?
     
-    @State private var hasUnsavedChanges = false
-    @State private var showUnsavedChangesAlert = false
     @State private var showingCopyAlert = false
     @State private var showingDeleteAlert = false
     @State private var showNameEmptyAlert = false
@@ -73,13 +71,6 @@ struct AddTask: View {
                 ToolbarSpacer()
             }
             
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    saveTask()
-                }
-                .disabled(workingTask.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-            
             // Custom back button that replaces the system one
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -95,30 +86,17 @@ struct AddTask: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .alert("Unsaved Changes", isPresented: $showUnsavedChangesAlert) {
-            Button("Discard Changes", role: .destructive) {
-                dismiss()
-            }
-            Button("Keep Editing", role: .cancel) { }
-        } message: {
-            Text("You have unsaved changes. Discard changes or save.")
-        }
-        .onDisappear {
-            print("AddTask view disappeared")
-        }
     }
     
     private var titleSection: some View {
         Section() {
             TextField("Title (required)", text: $workingTask.title)
-                .onChange(of: workingTask.title) { hasUnsavedChanges = true }
             
             TextField("Description", text: Binding(
                 get: { workingTask.taskDescription ?? "" },
                 set: { workingTask.taskDescription = $0.isEmpty ? nil : $0 }
             ), axis: .vertical)
             .lineLimit(3...6)
-            .onChange(of: workingTask.taskDescription) { hasUnsavedChanges = true }
             
             HStack {
                 if let dueDate = workingTask.dueDate {
@@ -128,7 +106,6 @@ struct AddTask: View {
                             get: { dueDate },
                             set: { newValue in
                                 workingTask.dueDate = newValue
-                                hasUnsavedChanges = true
                             }
                         ),
                         displayedComponents: .date
@@ -137,13 +114,11 @@ struct AddTask: View {
                     
                     Button("Clear") {
                         workingTask.dueDate = nil
-                        hasUnsavedChanges = true
                     }
                     .foregroundColor(.red)
                 } else {
                     Button("Add Due Date") {
                         workingTask.dueDate = Date()
-                        hasUnsavedChanges = true
                     }
                     .foregroundColor(.accentColor)
                 }
@@ -157,7 +132,6 @@ struct AddTask: View {
                 Text(status.rawValue).tag(status as TaskStatus?)
             }
         }
-        .onChange(of: workingTask.status) { hasUnsavedChanges = true }
     }
     
     private var prioritySection: some View {
@@ -166,16 +140,11 @@ struct AddTask: View {
                 Text(priority.rawValue).tag(priority as TaskPriority?)
             }
         }
-        .onChange(of: workingTask.priority) { hasUnsavedChanges = true }
     }
     
     private var completedSection: some View {
         Toggle(isOn: $workingTask.completed) {
             Text("Completed")
-        }
-        .onChange(of: workingTask.completed) {
-            workingTask.status = .done
-            hasUnsavedChanges = true
         }
     }
     
@@ -187,7 +156,6 @@ struct AddTask: View {
             }
         }
         .disabled(projects.isEmpty)
-        .onChange(of: workingTask.project) { hasUnsavedChanges = true }
     }
     
     private var sectionHeader: some View {
@@ -220,7 +188,6 @@ struct AddTask: View {
                     workingTask.taskItems = []
                 }
                 workingTask.taskItems?.append(newItem)
-                hasUnsavedChanges = true
                 // Optionally focus the newly added item for quick editing
                 focusedItemIndex = (workingTask.taskItems?.count ?? 1) - 1
             }) {
@@ -235,14 +202,12 @@ struct AddTask: View {
                             get: { taskItems[idx].title },
                             set: { newValue in
                                 workingTask.taskItems?[idx].title = newValue
-                                hasUnsavedChanges = true
                             }
                         ))
                         .focused($focusedItemIndex, equals: idx)
                         
                         Button(action: {
                             workingTask.taskItems?.remove(at: idx)
-                            hasUnsavedChanges = true
                         }) {
                             Image(systemName: "minus.circle.fill")
                                 .foregroundColor(.red)
@@ -252,9 +217,7 @@ struct AddTask: View {
                 }
             }
         }
-        .onAppear() {
-            hasUnsavedChanges = false
-        }
+    
     }
     
     private func handleCopyTap() {
@@ -267,15 +230,6 @@ struct AddTask: View {
     
     // MARK: - Back Button Handling
     private func handleBackButtonTap() {
-        if hasUnsavedChanges {
-            showUnsavedChangesAlert = true
-        } else {
-            dismiss()
-        }
-    }
-    
-    // MARK: - Save Task
-    private func saveTask() {
         guard !workingTask.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             showNameEmptyAlert = true
             return
@@ -288,7 +242,7 @@ struct AddTask: View {
         
         do {
             try modelContext.save()
-            hasUnsavedChanges = false
+            dismiss()
         } catch {
             // Replace with your UI error handling if desired
             print("Failed to save model context: \(error)")

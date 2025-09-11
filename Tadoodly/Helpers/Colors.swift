@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let colors = ["red", "blue", "green", "orange", "purple", "teal", "pink", "indigo", "gray", "darkGray"]
+
 public func colorFromString(_ color: String) -> Color {
     switch color {
     case "red": return .red

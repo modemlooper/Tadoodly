@@ -89,7 +89,8 @@ struct ProjectDetail: View {
         .listRowInsets(EdgeInsets())
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Edit") {
+                NavigationLink(value: AddProjectRoute(project: project)) {
+                    Text("Edit")
                 }
             }
         }
