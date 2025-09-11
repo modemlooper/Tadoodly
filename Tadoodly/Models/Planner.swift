@@ -27,6 +27,14 @@ struct Information {
     var information: String
 }
 
+@available(iOS 26.0, *)
+@Generable
+struct additonalTask {
+    @Guide(description: "Descripion of task")
+    var name: String
+}
+
+
 // Conform PartiallyGenerated to Equatable and Hashable for SwiftUI compatibility
 @available(iOS 26.0, *)
 extension Information.PartiallyGenerated: Equatable, Hashable {
@@ -38,4 +46,4 @@ extension Information.PartiallyGenerated: Equatable, Hashable {
         hasher.combine(information)
     }
 }
-#endif
+#endif // canImport(FoundationModels)

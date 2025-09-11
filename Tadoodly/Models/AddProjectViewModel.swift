@@ -8,17 +8,18 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-class AddProjectViewModel: ObservableObject {
-    @Published var selectedIcon: String?
-    @Published var name: String
-    @Published var projectDescription: String
-    @Published var selectedColor: String
-    @Published var tasks: [UserTask]
-    @Published var status: ProjectStatus
-    @Published var dueDate: Date?
-    @Published var priority: ProjectPriority
+@Observable
+class AddProjectViewModel {
+   var selectedIcon: String?
+    var name: String
+    var projectDescription: String
+    var selectedColor: String
+    var tasks: [UserTask]
+    var status: ProjectStatus
+    var dueDate: Date?
+    var priority: ProjectPriority
     
-    let project: Project?
+    private(set) var project: Project?
     
     init(project: Project? = nil) {
         self.project = project
@@ -32,14 +33,45 @@ class AddProjectViewModel: ObservableObject {
         } else {
             self.status = .notStarted
         }
-        if let projectPriority = project?.priority, let status = ProjectPriority(rawValue: projectPriority) {
-            self.priority = status
+        if let projectPriority = project?.priority, let prio = ProjectPriority(rawValue: projectPriority) {
+            self.priority = prio
         } else {
             self.priority = .low
         }
         self.dueDate = project?.dueDate
     }
     
-    // Optionally, add helpers to update fields or validate as needed
+    func update(from project: Project?) {
+        self.project = project
+        guard let project else {
+            // Reset to defaults for "new project" mode
+            self.selectedIcon = "folder"
+            self.name = ""
+            self.projectDescription = ""
+            self.selectedColor = "blue"
+            self.tasks = []
+            self.status = .notStarted
+            self.priority = .low
+            self.dueDate = nil
+            return
+        }
+        
+        self.selectedIcon = project.icon.isEmpty ? "folder" : project.icon
+        self.name = project.name
+        self.projectDescription = project.projectDescription
+        self.selectedColor = project.color
+        self.tasks = Array(project.tasks) // force fresh value copy
+        if let status = ProjectStatus(rawValue: project.status) {
+            self.status = status
+        } else {
+            self.status = .notStarted
+        }
+        if let prio = ProjectPriority(rawValue: project.priority) {
+            self.priority = prio
+        } else {
+            self.priority = .low
+        }
+        self.dueDate = project.dueDate
+    }
 }
 

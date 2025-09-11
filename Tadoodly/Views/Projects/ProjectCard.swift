@@ -13,8 +13,8 @@ struct ProjectCard: View {
     
     @Environment(\.colorScheme) private var colorScheme
     
-    private var completedCount: Int { project.tasks?.filter { $0.completed }.count ?? 0 }
-    private var totalCount: Int { project.tasks?.count ?? 0 }
+    private var completedCount: Int { project.tasks.filter { $0.completed }.count }
+    private var totalCount: Int { project.tasks.count }
     
     var body: some View {
      
@@ -51,12 +51,14 @@ struct ProjectCard: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                            Text("Due \(project.dueDate, format: .dateTime.month(.abbreviated).day())")
+                        if let due = project.dueDate {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                Text("Due \(due, format: .dateTime.month(.abbreviated).day())")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                         
                         
                     }
@@ -82,3 +84,4 @@ struct ProjectCard: View {
     return ProjectCard(project: project)
         .modelContainer(container)
 }
+

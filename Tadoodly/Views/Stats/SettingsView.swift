@@ -11,10 +11,13 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showDeleteAlert = false
+    @AppStorage("isDarkMode") private var isDarkMode: Bool = false
     
     var body: some View {
         List {
-//            NavigationLink("Time Entries", destination: TimeEntriesView())
+            Toggle(isOn: $isDarkMode) {
+                Text("Dark Mode")
+            }
             
             Section {
                 Button("Delete App Data", role: .destructive) {

@@ -19,6 +19,9 @@ struct AddTaskView: View {
     @StateObject private var viewModel: AddTaskViewModel
     
     let task: UserTask?
+    let preselectedProject: Project? // NEW: optional preselection
+    
+    @State private var isAddItemShowing: Bool = false
     
     @State private var hasUnsavedChanges = false
     @State private var showUnsavedChangesAlert = false
@@ -30,8 +33,9 @@ struct AddTaskView: View {
     @State private var indexToDeleteTaskItem: Int? = nil
     @FocusState private var focusedItemIndex: Int?
     
-    init(task: UserTask?) {
+    init(task: UserTask?, preselectedProject: Project? = nil) {
         self.task = task
+        self.preselectedProject = preselectedProject
         _viewModel = StateObject(wrappedValue: AddTaskViewModel(task: task))
     }
     
@@ -107,14 +111,20 @@ struct AddTaskView: View {
                     router.root()
                 }
             }
-        
+            
             Button("Cancel", role: .cancel) { }
         })
         .alert("Are you sure you want to delete this task?", isPresented: $showingDeleteAlert, actions: {
             Button("Delete", role: .destructive) {
                 if let task = task {
                     task.delete(modelcontext: modelContext)
-                    router.root()
+                    try? modelContext.save() // ensure persistence before popping
+                    
+                    if preselectedProject != nil {
+                        router.root()
+                    } else {
+                        router.pop(2)
+                    }
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -138,6 +148,16 @@ struct AddTaskView: View {
             }
         } message: {
             Text("Please enter a title for your task or discard your changes.")
+        }
+        .onAppear {
+            // Preselect the project only when creating a new task and if a project is provided
+            if task == nil, let preselectedProject {
+                viewModel.selectedProject = preselectedProject
+            }
+            // Refresh from model if editing an existing task (child views may have persisted changes)
+            if let task {
+                viewModel.update(from: task)
+            }
         }
     }
     
@@ -163,13 +183,13 @@ struct AddTaskView: View {
             HStack {
                 if let dueDate = viewModel.dueDate {
                     DatePicker("Due Date", selection: Binding(
-                          get: { dueDate },
-                          set: { newValue in
-                              viewModel.dueDate = newValue
-                              hasUnsavedChanges = true
-                          }
-                        ), displayedComponents: .date)
-                        .datePickerStyle(.compact)
+                        get: { dueDate },
+                        set: { newValue in
+                            viewModel.dueDate = newValue
+                            hasUnsavedChanges = true
+                        }
+                    ), displayedComponents: .date)
+                    .datePickerStyle(.compact)
                     Button("Clear") {
                         viewModel.dueDate = nil
                         hasUnsavedChanges = true
@@ -222,7 +242,8 @@ struct AddTaskView: View {
                 Text("Time Tracking")
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary).opacity(0.8)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -231,16 +252,14 @@ struct AddTaskView: View {
         }
     }
     
-
+    
     
     private var checklistSection: some View {
         Section(header:
-            Text("Checklist")
+                    Text("Checklist")
         ) {
             Button(action: {
-                viewModel.taskItems.insert(TaskItem(title: "Item"), at: 0)
-                hasUnsavedChanges = true
-                focusedItemIndex = 0
+                isAddItemShowing = true
             }) {
                 Text("Add Item")
                     .foregroundColor(.accentColor)
@@ -276,6 +295,22 @@ struct AddTaskView: View {
                 showingDeleteTaskItemAlert = false
             }
         })
+        .onAppear() {
+            // When returning from AddTaskItemView that persisted to SwiftData,
+            // refresh local copy to reflect any changes.
+            if let task {
+                viewModel.update(from: task)
+            }
+        }
+        .navigationDestination(isPresented: $isAddItemShowing) {
+            // Persist immediately when editing an existing task.
+            // Pass the task through so AddTaskItemView saves to SwiftData.
+            AddTaskItemView(task: task) { newItem in
+                // If we were in "new task" mode (task == nil), still support draft append.
+                viewModel.taskItems.append(newItem)
+                hasUnsavedChanges = true
+            }
+        }
     }
     
     private func saveTask() {
@@ -290,17 +325,3 @@ struct AddTaskView: View {
     
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: UserTask.self, Project.self, TaskItem.self, configurations: config)
-
-    let sampleProject = Project(name: "Preview Project", color: "blue")
-    let sampleTask = UserTask(title: "Sample Preview Task", project: sampleProject, description: "A sample task for AddTaskView preview.")
-
-    let item1 = TaskItem(title: "Preview subtask 1")
-    let item2 = TaskItem(title: "Preview subtask 2")
-    sampleTask.taskItems = [item1, item2]
-
-    return AddTaskView(task: sampleTask)
-        .modelContainer(container)
-}

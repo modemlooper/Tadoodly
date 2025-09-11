@@ -15,16 +15,18 @@ import FoundationModels
 @MainActor
 final class ProjectPlanner {
     
-    @EnvironmentObject var model: ProjectPlannerViewModel
+    // Inject the view model instead of using @Environment
+    let model: ProjectPlannerViewModel
     
     private var session: LanguageModelSession
-    
     private var plan: Planner.PartiallyGenerated?
     
-    init() {
+    init(model: ProjectPlannerViewModel) {
+        self.model = model
         self.session = LanguageModelSession(
             instructions: "You are an expert project planner and will assist the user with their project by creating tasks"
         )
+        self.plan = nil
     }
     
     func generate(for project: Project) -> AsyncThrowingStream<Planner.PartiallyGenerated, Error> {
@@ -37,8 +39,9 @@ final class ProjectPlanner {
                         generating: Planner.self,
                         options: GenerationOptions(sampling: .greedy)
                     )
+                    // Iterate the stream as PartiallyGenerated values (same as in ProjectPlannerView.getPlan)
                     for try await partial in response {
-                        continuation.yield(partial)
+                        continuation.yield(partial.content)
                     }
                     continuation.finish()
                 } catch {
@@ -88,4 +91,4 @@ func isFoundationModelAvailable() -> Bool {
             return false
     }
 }
-#endif
+#endif // canImport(FoundationModels)

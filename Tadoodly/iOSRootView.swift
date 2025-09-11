@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 import Foundation
 
-struct ContentView: View {
+struct iOSRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -87,12 +87,12 @@ struct ContentView: View {
         task2.priority = TaskPriority.low
         modelContext.insert(task2)
         
-        return ContentView()
+        return iOSRootView()
             .modelContainer(container)
 //            .environmentObject(ProjectPlannerViewModel())
             .environmentObject(NavigationRouter())
     } else {
-        return ContentView()
+        return iOSRootView()
             .modelContainer(for: [Project.self, UserTask.self, TimeEntry.self], inMemory: true)
     }
 }

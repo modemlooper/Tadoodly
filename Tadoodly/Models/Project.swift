@@ -52,11 +52,11 @@ public final class Project: Identifiable {
     public var status: String = ProjectStatus.notStarted.rawValue
     public var priority: String = ProjectPriority.low.rawValue
     public var createdAt: Date = Date()
-    public var dueDate: Date = Date()
+    public var dueDate: Date? = Date()
     public var icon: String = "folder"
     
     @Relationship(deleteRule: .cascade, inverse: \UserTask.project)
-    public var tasks: [UserTask]? = []
+    public var tasks: [UserTask] = []
     
     public init(name: String, description: String = "", color: String = "darkGray", status: ProjectStatus = .notStarted, createdAt: Date = Date()) {
         self.name = name
@@ -67,7 +67,7 @@ public final class Project: Identifiable {
     }
     
     public var totalTime: TimeInterval {
-        tasks!.reduce(0) { $0 + $1.totalTime }
+        tasks.reduce(0) { $0 + $1.totalTime }
     }
     
     public func copy(modelContext: ModelContext) {
@@ -80,48 +80,46 @@ public final class Project: Identifiable {
 
         var newTasks: [UserTask] = []
 
-        if let tasks = self.tasks {
-            for oldTask in tasks {
-                let newTask = UserTask(title: oldTask.title, project: newProject, description: oldTask.taskDescription ?? "")
-                newTask.status = oldTask.status
-                newTask.priority = oldTask.priority
-                newTask.isActive = false
-                newTask.completed = oldTask.completed
-                newTask.dueDate = oldTask.dueDate
-                newTask.color = oldTask.color
+        for oldTask in self.tasks {
+            let newTask = UserTask(title: oldTask.title, project: newProject, description: oldTask.taskDescription ?? "")
+            newTask.status = oldTask.status
+            newTask.priority = oldTask.priority
+            newTask.isActive = false
+            newTask.completed = oldTask.completed
+            newTask.dueDate = oldTask.dueDate
+            newTask.color = oldTask.color
 
-                // Copy time entries
-                if let oldTimeEntries = oldTask.timeEntries {
-                    var newTimeEntries: [TimeEntry] = []
-                    for oldEntry in oldTimeEntries {
-                        let newEntry = TimeEntry()
-                        newEntry.startTime = oldEntry.startTime
-                        newEntry.endTime = oldEntry.endTime
-                        newEntry.duration = oldEntry.duration
-                        newEntry.date = oldEntry.date
-                        newEntry.note = oldEntry.note
-                        newEntry.task = newTask
-                        modelContext.insert(newEntry)
-                        newTimeEntries.append(newEntry)
-                    }
-                    newTask.timeEntries = newTimeEntries
+            // Copy time entries
+            if let oldTimeEntries = oldTask.timeEntries {
+                var newTimeEntries: [TimeEntry] = []
+                for oldEntry in oldTimeEntries {
+                    let newEntry = TimeEntry()
+                    newEntry.startTime = oldEntry.startTime
+                    newEntry.endTime = oldEntry.endTime
+                    newEntry.duration = oldEntry.duration
+                    newEntry.date = oldEntry.date
+                    newEntry.note = oldEntry.note
+                    newEntry.task = newTask
+                    modelContext.insert(newEntry)
+                    newTimeEntries.append(newEntry)
                 }
-
-                // Copy task items
-                if let oldTaskItems = oldTask.taskItems {
-                    var newTaskItems: [TaskItem] = []
-                    for oldItem in oldTaskItems {
-                        let newItem = TaskItem(title: oldItem.title, task: newTask, description: oldItem.itemDescription ?? "")
-                        newItem.completed = oldItem.completed
-                        modelContext.insert(newItem)
-                        newTaskItems.append(newItem)
-                    }
-                    newTask.taskItems = newTaskItems
-                }
-
-                modelContext.insert(newTask)
-                newTasks.append(newTask)
+                newTask.timeEntries = newTimeEntries
             }
+
+            // Copy task items
+            if let oldTaskItems = oldTask.taskItems {
+                var newTaskItems: [TaskItem] = []
+                for oldItem in oldTaskItems {
+                    let newItem = TaskItem(title: oldItem.title, task: newTask, description: oldItem.itemDescription ?? "")
+                    newItem.completed = oldItem.completed
+                    modelContext.insert(newItem)
+                    newTaskItems.append(newItem)
+                }
+                newTask.taskItems = newTaskItems
+            }
+
+            modelContext.insert(newTask)
+            newTasks.append(newTask)
         }
 
         newProject.tasks = newTasks
@@ -133,4 +131,3 @@ public final class Project: Identifiable {
         modelContext.delete(self)
     }
 }
-

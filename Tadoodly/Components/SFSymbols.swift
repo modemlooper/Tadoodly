@@ -11,7 +11,7 @@ import SwiftUI
 struct SFSymbolPicker: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Binding var selectedSymbol: String?
+    @Binding var selectedSymbol: String   // non-optional
     
     // For demo, a basic curated set of symbols. Expand as needed.
     let symbols: [String] = [
@@ -46,8 +46,7 @@ struct SFSymbolPicker: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 32, height: 32)
-                                    // Safely unwrap the optional binding for color highlighting
-                                    .foregroundColor(selectedSymbol ?? "" == symbol ? Color.accentColor : .secondary)
+                                    .foregroundColor(selectedSymbol == symbol ? Color.accentColor : .secondary)
                             }
                             .padding(4)
                         }
@@ -61,12 +60,12 @@ struct SFSymbolPicker: View {
 }
 
 // Usage example elsewhere:
-// @State private var chosenSymbol: String? = "star"
+// @State private var chosenSymbol: String = "star"
 // SFSymbolPicker(selectedSymbol: $chosenSymbol)
 
 
 struct SFSymbolPickerPreviewContainer: View {
-    @State private var chosenSymbol: String? = "star"
+    @State private var chosenSymbol: String = "star"
     var body: some View {
         SFSymbolPicker(selectedSymbol: $chosenSymbol)
     }
@@ -75,3 +74,4 @@ struct SFSymbolPickerPreviewContainer: View {
 #Preview {
     SFSymbolPickerPreviewContainer()
 }
+

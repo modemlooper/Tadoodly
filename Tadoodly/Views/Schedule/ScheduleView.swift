@@ -210,11 +210,9 @@ struct CustomCalendarView: View {
     sampleTask.dueDate = Calendar.current.date(byAdding: .day, value: 2, to: Date())
     context.insert(sampleTask)
 
-    return
-    NavigationStack {
+    return NavigationStack {
         ScheduleView()
             .modelContainer(container)
             .environmentObject(NavigationRouter())
     }
 }
-

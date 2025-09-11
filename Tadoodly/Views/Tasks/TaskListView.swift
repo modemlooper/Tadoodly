@@ -9,9 +9,6 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-
-
-
 enum SortOption: String, CaseIterable, Identifiable {
     case updateAt = "Recent"
     case createdAt = "Date"
@@ -84,14 +81,17 @@ struct TaskListView: View {
             }
         }
         .sheet(isPresented: $showingProjectAssist) {
+        #if canImport(FoundationModels)
             if #available(iOS 26.0, *) {
-                ProjectAssistSheet()
+                ProjectPlannerView(model: ProjectPlannerViewModel())
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
             } else {
                 Text("Project Planner is only available on iOS 26.0 or newer.")
             }
+        #endif
         }
+      
     }
 }
 
@@ -110,39 +110,11 @@ private struct ProjectAssistButton: View {
     }
 }
 
+#if canImport(FoundationModels)
 @available(iOS 26.0, *)
 private struct ProjectAssistSheet: View {
-    //@EnvironmentObject var projectPlannerViewModel: ProjectPlannerViewModel
     var body: some View {
-        //ProjectPlannerView()
+        ProjectPlannerView(model: ProjectPlannerViewModel())
     }
 }
-
-#if canImport(FoundationModels)
-#Preview {
-    if #available(iOS 26.0, *) {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: UserTask.self, Project.self, TimeEntry.self, configurations: config)
-        let modelContext = container.mainContext
-        let project = Project(name: "Work", color: "blue")
-        modelContext.insert(project)
-        let task = UserTask(title: "Sample Task", project: project)
-        task.priority = TaskPriority.low
-        modelContext.insert(task)
-        return AnyView(
-            TaskListView()
-                .modelContainer(container)
-                .environmentObject(ProjectPlannerViewModel())
-                .environmentObject(NavigationRouter())
-        )
-    } else {
-        let router = NavigationRouter()
-        return AnyView(
-            TaskListView()
-                .modelContainer(for: [Project.self, UserTask.self, TimeEntry.self], inMemory: true)
-                .environmentObject(router)
-        )
-    }
-}
-#endif // canImport(FoundationModels)
-
+#endif

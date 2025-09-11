@@ -3,6 +3,7 @@ import SwiftUI
 
 final class NavigationRouter: ObservableObject {
     @Published var path = NavigationPath()
+    @Published var refreshID = UUID() // ADD: a simple change signal
     
     init() {}
     
@@ -14,9 +15,19 @@ final class NavigationRouter: ObservableObject {
         path.removeLast()
     }
     
+    // NEW: Pop multiple elements safely
+    func pop(_ count: Int) {
+        guard count > 0 else { return }
+        let toRemove = min(count, path.count)
+        if toRemove > 0 {
+            path.removeLast(toRemove)
+        }
+    }
+    
     func root() {
         path = NavigationPath()
     }
+ 
 }
 
 enum Route: Hashable {

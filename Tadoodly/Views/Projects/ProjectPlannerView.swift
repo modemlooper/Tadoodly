@@ -16,7 +16,7 @@ struct ProjectPlannerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @EnvironmentObject var model: ProjectPlannerViewModel
+    @State var model: ProjectPlannerViewModel
     
     @State private var isCreateDisabled: Bool = true
     @State private var isInputDisabled: Bool = false
@@ -79,6 +79,9 @@ struct ProjectPlannerView: View {
                 if !model.tasks.isEmpty {
                     TasksListView(model: model)
                 }
+            }
+            .onAppear() {
+                isInputFocused = true
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .toolbar {
@@ -195,10 +198,10 @@ struct ProjectPlannerView: View {
             model.inputText = ""
             for try await partial in response {
                 await MainActor.run {
-                    model.partialPlans.append(partial)
-                    model.title = partial.title ?? ""
-                    model.description = partial.description ?? ""
-                    model.tasks = partial.tasks ?? []
+                    model.partialPlans.append(partial.content)
+                    model.title = partial.content.title ?? ""
+                    model.description = partial.content.description ?? ""
+                    model.tasks = partial.content.tasks ?? []
                 }
             }
         } catch {
@@ -224,7 +227,7 @@ struct ProjectPlannerView: View {
 
 @available(iOS 26.0, *)
 struct TasksListView: View {
-    @ObservedObject var model: ProjectPlannerViewModel
+    @State var model: ProjectPlannerViewModel
     @State private var isGenerating: Bool = false
     
     var body: some View {
@@ -265,13 +268,4 @@ struct TasksListView: View {
         model.tasks.remove(atOffsets: offsets)
     }
 }
-
-#Preview {
-    if #available(iOS 26.0, *) {
-        ProjectPlannerView()
-            .environmentObject(ProjectPlannerViewModel())
-    } else {
-        // Fallback on earlier versions
-    }
-}
-#endif
+#endif // canImport(FoundationModels)

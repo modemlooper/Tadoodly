@@ -16,23 +16,28 @@ struct AddProjectView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
 
-    @StateObject private var viewModel: AddProjectViewModel
+    @State private var viewModel: AddProjectViewModel
 
     @State private var showingDeleteAlert = false
+    @State private var showingTaskDeleteAlert = false
     @State private var showingCopyAlert = false
-    @State private var indexToDelete: Int? = nil
+    @State private var taskToDelete: UserTask? = nil
 
     @FocusState private var focusedTaskIndex: Int?
 
     @State private var hasUnsavedChanges = false
     @State private var showUnsavedChangesAlert = false
     @State private var showNameRequiredUnsavedAlert = false
+    @State private var showSaveProjectFirstAlert = false
+    
+    @State private var isAddItemShowing: Bool = false
+    @State private var showSymbolPicker: Bool = false
 
     let project: Project?
 
     init(project: Project? = nil) {
         self.project = project
-        _viewModel = StateObject(wrappedValue: AddProjectView.createViewModel(project: project))
+        _viewModel = State(wrappedValue: AddProjectView.createViewModel(project: project))
     }
     
     private static func createViewModel(project: Project?) -> AddProjectViewModel {
@@ -43,24 +48,14 @@ struct AddProjectView: View {
         HStack(spacing: 16) {
             Spacer()
             if project != nil {
-                let copyIcon = AnyView(
-                    Image(systemName: "document.on.document")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                        .onTapGesture {
-                            showingCopyAlert = true
-                        }
-                )
-                let deleteIcon = AnyView(
-                    Image(systemName: "trash")
-                        .font(.title2)
-                        .foregroundColor(.red)
-                        .onTapGesture {
-                            showingDeleteAlert = true
-                        }
-                )
-                copyIcon
-                deleteIcon
+                Image(systemName: "document.on.document")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+                    .onTapGesture(perform: handleCopyTap)
+                Image(systemName: "trash")
+                    .font(.title2)
+                    .foregroundColor(.red)
+                    .onTapGesture(perform: handleDeleteTap)
             }
         }
         .frame(maxWidth: .infinity)
@@ -69,29 +64,17 @@ struct AddProjectView: View {
     var body: some View {
         Form {
             projectDetailsSection
-            
             StatusSection
-
             ColorSection
-            
             AddTaskSection
-
         }
-        .navigationTitle( project != nil ? "Edit Project" : "Add Project")
+        .navigationTitle(project != nil ? "Edit Project" : "Add Project")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
-                    if hasUnsavedChanges {
-                        if viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            showNameRequiredUnsavedAlert = true
-                        } else {
-                            showUnsavedChangesAlert = true
-                        }
-                    } else {
-                        dismiss()
-                    }
+                    handleBackButton()
                 } label: {
                     Image(systemName: "chevron.left")
                 }
@@ -103,6 +86,10 @@ struct AddProjectView: View {
                 .disabled(viewModel.name.isEmpty)
             }
         }
+        .navigationDestination(isPresented: $isAddItemShowing) {
+            // Use the view model's current project, which we set on save
+            AddTaskView(task: nil, preselectedProject: viewModel.project)
+        }
         .alert("Are you sure you want to duplicate this project?", isPresented: $showingCopyAlert, actions: {
             Button("Duplicate", role: .destructive) {
                 if let project = project {
@@ -110,17 +97,37 @@ struct AddProjectView: View {
                     router.root()
                 }
             }
-        
             Button("Cancel", role: .cancel) { }
         })
         .alert("Are you sure you want to delete this project?", isPresented: $showingDeleteAlert, actions: {
             Button("Delete", role: .destructive) {
                 if let project = project {
                     project.delete(modelContext: modelContext)
+                    try? modelContext.save()
                     router.root()
                 } 
             }
             Button("Cancel", role: .cancel) {}
+        })
+        .alert("Are you sure you want to delete this task?", isPresented: $showingTaskDeleteAlert, actions: {
+            Button("Delete", role: .destructive) {
+                if let task = taskToDelete {
+                    // Remove from the in-memory list
+                    if let idx = viewModel.tasks.firstIndex(where: { $0.id == task.id }) {
+                        let removed = viewModel.tasks.remove(at: idx)
+                        // If editing an existing project, delete from SwiftData as well
+                        if project != nil {
+                            removed.delete(modelcontext: modelContext)
+                            try? modelContext.save()
+                        }
+                        hasUnsavedChanges = true
+                    }
+                }
+                taskToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                taskToDelete = nil
+            }
         })
         .alert("You have unsaved changes. What would you like to do?", isPresented: $showUnsavedChangesAlert, actions: {
             Button("Save") {
@@ -142,6 +149,50 @@ struct AddProjectView: View {
         } message: {
             Text("Please enter a name for your project or discard your changes.")
         }
+        .alert("Save Project First", isPresented: $showSaveProjectFirstAlert) {
+//            Button("Save & Add Task") {
+//                if !viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+//                    saveProject()
+//                    isAddItemShowing = true
+//                }
+//            }
+            Button("Ok", role: .cancel) { }
+        } message: {
+            Text("Please add a name and save before adding tasks.")
+        }
+        .sheet(isPresented: $showSymbolPicker) {
+            SFSymbolPicker(
+                selectedSymbol: Binding(
+                    get: { viewModel.selectedIcon ?? "folder" },
+                    set: { newValue in
+                        viewModel.selectedIcon = newValue
+                        hasUnsavedChanges = true
+                    }
+                )
+            )
+        }
+        .onAppear(perform: handleOnAppear)
+        .onChange(of: isAddItemShowing) { oldValue, newValue in
+            // When AddTaskView is dismissed (newValue == false), refresh tasks from the live project
+            if oldValue == true, newValue == false {
+                // Check if we have a project in the view model (saved project)
+                if let vmProject = viewModel.project {
+                    if let latest = fetchProject(by: vmProject.id) {
+                        viewModel.update(from: latest)
+                    } else {
+                        viewModel.update(from: nil)
+                    }
+                }
+                // Also check the original project parameter for existing projects
+                else if let project = project {
+                    if let latest = fetchProject(by: project.id) {
+                        viewModel.update(from: latest)
+                    } else {
+                        viewModel.update(from: nil)
+                    }
+                }
+            }
+        }
     }
 
     private var projectDetailsSection: some View {
@@ -158,13 +209,16 @@ struct AddProjectView: View {
             
             HStack {
                 if let dueDate = viewModel.dueDate {
-                    DatePicker("Due Date", selection: Binding(
-                        get: { dueDate },
-                        set: { newValue in
-                            viewModel.dueDate = newValue
-                            hasUnsavedChanges = true
-                        }
-                    ), displayedComponents: .date)
+                    DatePicker("Due Date",
+                               selection: Binding(
+                                   get: { dueDate },
+                                   set: { newValue in
+                                       viewModel.dueDate = newValue
+                                       hasUnsavedChanges = true
+                                   }
+                               ),
+                               displayedComponents: .date
+                    )
                     .datePickerStyle(.compact)
                     Button("Clear") {
                         viewModel.dueDate = nil
@@ -188,35 +242,28 @@ struct AddProjectView: View {
                     Text("Tasks")
         ) {
 
-            Button(action: {
-                viewModel.tasks.insert(UserTask(title: "Task"), at: 0)
-                focusedTaskIndex = 0
-                hasUnsavedChanges = true
-            }) {
+            Button(action: handleAddTaskTap) {
                 Text("Add Task")
                     .foregroundColor(.accentColor)
             }.buttonStyle(.plain)
 
-            ForEach(viewModel.tasks.indices, id: \.self) { idx in
-                let titleBinding = Binding(
-                    get: { viewModel.tasks[idx].title },
-                    set: { viewModel.tasks[idx].title = $0 }
-                )
-                HStack {
-                    TextField("Task", text: titleBinding)
-                        .focused($focusedTaskIndex, equals: idx)
-                        .onChange(of: titleBinding.wrappedValue) { _, _ in
-                            hasUnsavedChanges = true
-                        }
-                    Button(action: {
-                        indexToDelete = idx
-                        showingDeleteAlert = true
-                    }) {
-                        Image(systemName: "minus.circle.fill").foregroundColor(.red)
-                    }
+            ForEach(viewModel.tasks, id: \.id) { task in
+                HStack() {
+                    Text(task.title)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary).opacity(0.8)
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    router.navigate(.editTask(task))
                 }
             }
         }
+    
     }
     
     private var StatusSection: some View {
@@ -235,7 +282,7 @@ struct AddProjectView: View {
                     Text(priorityOption.rawValue).tag(priorityOption)
                 }
             }
-            .onChange(of: viewModel.status) { _, _ in
+            .onChange(of: viewModel.priority) { _, _ in
                 hasUnsavedChanges = true
             }
         }
@@ -260,23 +307,22 @@ struct AddProjectView: View {
                     }
                 }
             }
-
-            NavigationLink(destination: SFSymbolPicker(selectedSymbol: Binding<String?>(
-                get: { viewModel.selectedIcon },
-                set: {
-                    viewModel.selectedIcon = $0
-                    hasUnsavedChanges = true
-                }
-            ))) {
+            
+            // Custom row with your own chevron; no default accessory
+            Button {
+                showSymbolPicker = true
+            } label: {
                 HStack {
                     Text("Icon")
                     Spacer()
-                    HStack {
-                        Image(systemName: viewModel.selectedIcon ?? project?.icon ?? "folder")
-                            .foregroundColor(.accent)
+                    HStack(spacing: 8) {
+                        Image(systemName: viewModel.selectedIcon ?? "folder")
+                            .foregroundColor(.accentColor)
                     }
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
     
@@ -287,38 +333,95 @@ struct AddProjectView: View {
             project.projectDescription = viewModel.projectDescription
             project.color = viewModel.selectedColor
             project.status = viewModel.status.rawValue
-            project.icon = viewModel.selectedIcon ?? "folder"
+            project.icon = viewModel.selectedIcon ?? project.icon
+            project.priority = viewModel.priority.rawValue
+            project.dueDate = viewModel.dueDate ?? project.dueDate
 
-            // Remove old tasks if needed, update tasks array
-            // Assign project to each task and insert new tasks if needed
+            // Update tasks and relationships
             project.tasks = viewModel.tasks
             for task in viewModel.tasks {
                 task.project = project
                 modelContext.insert(task)
             }
+            // Keep VM's project in sync so navigation can use it
+            viewModel.update(from: project)
         } else {
             // Create new project
             let newProject = Project(name: viewModel.name, description: viewModel.projectDescription, color: viewModel.selectedColor, status: viewModel.status)
             newProject.icon = viewModel.selectedIcon ?? "folder"
+            newProject.priority = viewModel.priority.rawValue
+            newProject.dueDate = viewModel.dueDate ?? nil
             newProject.tasks = viewModel.tasks
             for task in viewModel.tasks {
                 task.project = newProject
                 modelContext.insert(task)
             }
             modelContext.insert(newProject)
+            // Update VM so we now have a non-nil project reference
+            viewModel.update(from: newProject)
         }
         try? modelContext.save()
         hasUnsavedChanges = false
         //dismiss()
     }
     
+    // MARK: - Helpers
+    private func fetchProject(by id: UUID) -> Project? {
+        let descriptor = FetchDescriptor<Project>(predicate: #Predicate { $0.id == id }, sortBy: [])
+        return try? modelContext.fetch(descriptor).first
+    }
+    
+    private func handleCopyTap() {
+        showingCopyAlert = true
+    }
+    
+    private func handleDeleteTap() {
+        showingDeleteAlert = true
+    }
+    
+    private func handleBackButton() {
+        if hasUnsavedChanges {
+            if viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                showNameRequiredUnsavedAlert = true
+            } else {
+                showUnsavedChangesAlert = true
+            }
+        } else {
+            dismiss()
+        }
+    }
+    
+    private func handleAddTaskTap() {
+        // If we have a saved project in the VM, allow navigation.
+        if let _ = viewModel.project {
+            isAddItemShowing = true
+            return
+        }
+        // Otherwise, block and ask user to save first
+        if viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            showSaveProjectFirstAlert = true
+        } else if hasUnsavedChanges {
+            showSaveProjectFirstAlert = true
+        } else {
+            // Fallback: still blocked because no concrete project exists
+            showSaveProjectFirstAlert = true
+        }
+    }
+    
+    private func handleOnAppear() {
+        // Stronger: refetch the latest Project by id to avoid stale references.
+        guard let project else { return }
+        if let latest = fetchProject(by: project.id) {
+            viewModel.update(from: latest)
+        } else {
+            // If the project was deleted elsewhere, clear the VM to defaults.
+            viewModel.update(from: nil)
+        }
+    }
 }
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: UserTask.self, Project.self, TaskItem.self, configurations: config)
-    AddProjectView()
-        .modelContainer(container)
-        .environmentObject(NavigationRouter())
+struct NoChevronButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
 }
-

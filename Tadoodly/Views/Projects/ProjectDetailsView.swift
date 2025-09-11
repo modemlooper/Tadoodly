@@ -19,13 +19,14 @@ struct ProjectDetailsView: View {
     
     @State private var showingDeleteConfirmation: Bool = false
     @State private var pendingDeleteOffsets: IndexSet = []
+    @State private var isAddItemShowing: Bool = false
     
     var filteredTasks: [UserTask] {
         allTasks.filter { $0.project?.id == project.id }
     }
     
-    private var completedCount: Int { project.tasks?.filter { $0.completed }.count ?? 0 }
-    private var totalCount: Int { project.tasks?.count ?? 0 }
+    private var completedCount: Int { filteredTasks.filter { $0.completed }.count }
+    private var totalCount: Int { filteredTasks.count }
     
     var body: some View {
         
@@ -53,12 +54,14 @@ struct ProjectDetailsView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                            Text("Due \(project.dueDate, format: .dateTime.month(.abbreviated).day())")
+                        if let due = project.dueDate {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                Text("Due \(due, format: .dateTime.month(.abbreviated).day())")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                         
                         HStack(spacing: 4) {
                             Image(systemName: "flag")
@@ -75,12 +78,10 @@ struct ProjectDetailsView: View {
                         Text("Tasks")
                             .font(.headline)
                         Spacer()
-                        if let items = project.tasks {
-                            let completed = items.filter { $0.completed }.count
-                            Text("\(completed)/\(items.count)")
-                                .font(.subheadline)
-                                .foregroundStyle(.gray)
-                        }
+                        let completed = filteredTasks.filter { $0.completed }.count
+                        Text("\(completed)/\(filteredTasks.count)")
+                            .font(.subheadline)
+                            .foregroundStyle(.gray)
                     }
                     
                     if filteredTasks.isEmpty == true {
@@ -91,7 +92,7 @@ struct ProjectDetailsView: View {
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .center)
                             Button {
-                                router.navigate(Route.editProject(project))
+                                saveProjectThenShowAddTask()
                             } label: {
                                 Text("Add Task")
                                    
@@ -121,7 +122,7 @@ struct ProjectDetailsView: View {
                         router.navigate(Route.viewTask(task))
                     }
                 }
-                .listRowInsets(.init())
+                .listRowInsets(.init(top: 1, leading: 0, bottom: 1, trailing: 0))
             }
         }
         .animation(.default, value: filteredTasks)
@@ -144,6 +145,9 @@ struct ProjectDetailsView: View {
         }, message: {
             Text("Are you sure you want to delete the selected task(s)?")
         })
+        .navigationDestination(isPresented: $isAddItemShowing) {
+            AddTaskView(task: nil, preselectedProject: project)
+        }
     }
     
     private func askDeleteConfirmation(offsets: IndexSet) {
@@ -162,18 +166,30 @@ struct ProjectDetailsView: View {
             showingDeleteConfirmation = false
         }
     }
+    
+    private func saveProjectThenShowAddTask() {
+        // Ensure project is inserted in the context (in case it was created in-memory)
+        modelContext.insert(project)
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save project before adding task: \(error)")
+        }
+        isAddItemShowing = true
+    }
 }
 
-#Preview {
-    let container = try! ModelContainer(for: Project.self, UserTask.self, configurations: .init(isStoredInMemoryOnly: true))
-    let sampleProject = Project(name: "Preview Project", description: "A test project for previewing.", color: "blue")
-    let sampleTask1 = UserTask(title: "Sample Task 1", project: sampleProject, description: "This is the first sample task.")
-    let sampleTask2 = UserTask(title: "Sample Task 2", project: sampleProject, description: "This is the second sample task.")
-    container.mainContext.insert(sampleProject)
-    container.mainContext.insert(sampleTask1)
-    container.mainContext.insert(sampleTask2)
-    
-    return ProjectDetailsView(project: sampleProject)
-        .environmentObject(NavigationRouter())
-        .modelContainer(container)
-}
+//#Preview {
+//    let container = try! ModelContainer(for: Project.self, UserTask.self, configurations: .init(isStoredInMemoryOnly: true))
+//    let sampleProject = Project(name: "Preview Project", description: "A test project for previewing.", color: "blue")
+//    let sampleTask1 = UserTask(title: "Sample Task 1", project: sampleProject, description: "This is the first sample task.")
+//    let sampleTask2 = UserTask(title: "Sample Task 2", project: sampleProject, description: "This is the second sample task.")
+//    container.mainContext.insert(sampleProject)
+//    container.mainContext.insert(sampleTask1)
+//    container.mainContext.insert(sampleTask2)
+//    
+//    return ProjectDetailsView(project: sampleProject)
+//        .environmentObject(NavigationRouter())
+//        .modelContainer(container)
+//}
+

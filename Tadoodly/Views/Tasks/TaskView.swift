@@ -15,6 +15,8 @@ struct TaskView: View {
     
     let task: UserTask?
     
+    @State private var isAddItemShowing: Bool = false
+    
     private var chipColor: Color {
         switch task!.status {
         case .inProgress:
@@ -170,7 +172,8 @@ struct TaskView: View {
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .center)
                             Button {
-                                router.navigate(Route.editTask(task!))
+                                //router.navigate(Route.addTaskItem(task!))
+                                isAddItemShowing = true
                             } label: {
                                 Text("Add Item")
                             }
@@ -193,6 +196,9 @@ struct TaskView: View {
                     }
 
                 }
+            }
+            .navigationDestination(isPresented: $isAddItemShowing) {
+                AddTaskItemView(task: task)
             }
     }
 }

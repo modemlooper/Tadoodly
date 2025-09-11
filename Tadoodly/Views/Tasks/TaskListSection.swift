@@ -203,9 +203,8 @@ struct TaskListOptionsPopover: View {
                     Text("Settings")
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .imageScale(.medium)
-                        .font(.subheadline.bold())
-                        .foregroundColor(colorScheme == .dark ? .secondary : .black)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.accentColor)
                         
                 }
             }
