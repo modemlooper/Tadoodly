@@ -56,7 +56,7 @@ struct RootView: View {
             }
             
             NavigationStack() {
-                Text("Stats")
+                StatsView()
                 
             }
             .tabItem {
