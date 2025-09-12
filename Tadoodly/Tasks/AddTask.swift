@@ -95,24 +95,26 @@ struct AddTask: View {
         })
         .toolbar {
             
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    handleCopyTap()
-                } label: {
-                    Label("Duplicate", systemImage: "document.on.document")
+            if task != nil {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        handleCopyTap()
+                    } label: {
+                        Label("Duplicate", systemImage: "document.on.document")
+                    }
                 }
             }
             
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    handleDeleteTap()
-                } label: {
-                    Label("Delete", systemImage: "trash")
+            if task != nil {
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        handleDeleteTap()
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
-            }
-            
-            if #available(iOS 26.0, *) {
-                ToolbarSpacer()
+                
             }
             
             // Custom back button that replaces the system one
@@ -275,7 +277,7 @@ struct AddTask: View {
     // MARK: - Back Button Handling
     private func handleBackButtonTap() {
         guard !workingTask.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showNameEmptyAlert = true
+            dismiss()
             return
         }
         
