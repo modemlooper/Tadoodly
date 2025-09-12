@@ -56,7 +56,7 @@ struct AddTask: View {
                 if let task = task {
                     // Manually duplicate the task since `copy(modelcontext:)` doesn't exist
                     let newTask = UserTask()
-                    newTask.title = task.title + " Copy"
+                    newTask.title = task.title + " (Copy)"
                     newTask.taskDescription = task.taskDescription
                     newTask.dueDate = task.dueDate
                     newTask.priority = task.priority

@@ -54,7 +54,7 @@ struct AddProject: View {
                     // Manually duplicate the project since `copy(modelcontext:)` doesn't exist
                     let duplicate = Project()
                     // Copy scalar properties
-                    duplicate.name = project.name + " Copy"
+                    duplicate.name = project.name + " (Copy)"
                     duplicate.projectDescription = project.projectDescription
                     duplicate.dueDate = project.dueDate
                     duplicate.status = project.status
