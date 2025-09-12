@@ -33,9 +33,9 @@ struct AddProject: View {
     var body: some View {
         Form {
             projectDetailsSection
-            AddTaskSection
             StatusSection
             ColorSection
+            AddTaskSection
         }
         .onAppear() {
             if let project = project {
@@ -150,35 +150,6 @@ struct AddProject: View {
         }
     }
     
-    private var AddTaskSection: some View {
-        Section(header:
-                    Text("Tasks")
-        ) {
-
-            Button(action: handleAddTaskTap) {
-                Text("Add Task")
-                    .foregroundColor(.accentColor)
-            }.buttonStyle(.plain)
-
-            ForEach(workingProject.tasks ?? [], id: \.id) { task in
-                HStack() {
-                    Text(task.title)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary).opacity(0.8)
-                }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                   
-                }
-            }
-        }
-    
-    }
-    
     private var StatusSection: some View {
         Section {
             Picker("Status", selection: $workingProject.status) {
@@ -231,6 +202,45 @@ struct AddProject: View {
             }
             .buttonStyle(.plain)
         }
+        .sheet(isPresented: $showSymbolPicker) {
+            SFSymbolPicker(
+                selectedSymbol: Binding(
+                    get: { workingProject.icon },
+                    set: { newValue in
+                        workingProject.icon = newValue
+                    }
+                )
+            )
+        }
+    }
+    
+    private var AddTaskSection: some View {
+        Section(header:
+                    Text("Tasks")
+        ) {
+
+            Button(action: handleAddTaskTap) {
+                Text("Add Task")
+                    .foregroundColor(.accentColor)
+            }.buttonStyle(.plain)
+
+            ForEach(workingProject.tasks ?? [], id: \.id) { task in
+                HStack() {
+                    Text(task.title)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary).opacity(0.8)
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                   
+                }
+            }
+        }
+    
     }
     
     private func handleAddTaskTap() {

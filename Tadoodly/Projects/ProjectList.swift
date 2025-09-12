@@ -43,6 +43,7 @@ struct ProjectList: View {
                                 .highPriorityGesture(
                                     TapGesture(count: 2).onEnded {
                                         // Navigate to edit on double-tap
+                                        path.append(project)
                                         path.append(AddProjectRoute(project: project))
                                     }
                                 )
@@ -52,7 +53,7 @@ struct ProjectList: View {
                         .buttonStyle(.plain)
                         .listRowInsets(EdgeInsets())
                         
-                        Divider()
+                       
                     }
                 }
                 .scrollIndicators(.hidden)
@@ -91,7 +92,7 @@ struct ProjectRow: View {
                         .foregroundColor(colorFromString(project.color))
                 }
                 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 8) {
                         Text(project.name)
                             .font(.title3)
@@ -124,11 +125,15 @@ struct ProjectRow: View {
                         
                         
                     }
+                    
+                    Divider()
                 }
+              
                 
             
             }
-            .padding()
+            .padding(.top)
+            .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
             

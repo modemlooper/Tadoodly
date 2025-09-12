@@ -37,6 +37,7 @@ struct TaskList: View {
                                         .highPriorityGesture(
                                             TapGesture(count: 2).onEnded {
                                                 // Navigate to edit on double-tap
+                                                path.append(task)
                                                 path.append(AddTaskRoute(task: task))
                                             }
                                         )
@@ -52,22 +53,18 @@ struct TaskList: View {
             }
             .navigationTitle("Tasks")
             .toolbar {
-#if canImport(FoundationModels)
+            #if canImport(FoundationModels)
                 ToolbarItem(placement: .automatic) {
-                    if #available(iOS 26.0, *) {
                         Button {
                             
                         } label: {
                             Label("AI Assist", systemImage: "sparkles")
                         }
-                    } else {
-                        // Fallback on earlier versions
-                    }
                 }
                 if #available(iOS 26.0, *) {
                     ToolbarSpacer()
                 }
-#endif
+            #endif
                 ToolbarItem {
                     Button {
                         
