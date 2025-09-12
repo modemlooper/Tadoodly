@@ -12,8 +12,10 @@ struct AddProject: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     var project: Project?
+    
+    @Binding var path: NavigationPath
     
     @State private var showingDeleteAlert = false
     @State private var showingTaskDeleteAlert = false
@@ -53,7 +55,7 @@ struct AddProject: View {
                     try? modelContext.save()
                     
                 }
-                dismiss()
+                path = NavigationPath()
             }
             Button("Cancel", role: .cancel) {}
         })

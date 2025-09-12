@@ -17,6 +17,8 @@ struct AddTask: View {
     
     var task: UserTask?
     
+    @Binding var path: NavigationPath
+    
     @State private var showingCopyAlert = false
     @State private var showingDeleteAlert = false
     @State private var showNameEmptyAlert = false
@@ -49,6 +51,48 @@ struct AddTask: View {
             }
             
         }
+        .alert("Are you sure you want to duplicate this task?", isPresented: $showingCopyAlert, actions: {
+            Button("Duplicate", role: .destructive) {
+                if let task = task {
+                    // Manually duplicate the task since `copy(modelcontext:)` doesn't exist
+                    let newTask = UserTask()
+                    newTask.title = task.title + " Copy"
+                    newTask.taskDescription = task.taskDescription
+                    newTask.dueDate = task.dueDate
+                    newTask.priority = task.priority
+                    newTask.status = task.status
+                    newTask.completed = false
+                    newTask.project = task.project
+                    // Deep-copy checklist items if present
+                    if let items = task.taskItems {
+                        var cloned: [TaskItem] = []
+                        cloned.reserveCapacity(items.count)
+                        for item in items {
+                            let newItem = TaskItem()
+                            newItem.title = item.title
+                            cloned.append(newItem)
+                        }
+                        newTask.taskItems = cloned
+                    }
+                    modelContext.insert(newTask)
+                    try? modelContext.save()
+                }
+                path = NavigationPath()
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        })
+        .alert("Are you sure you want to delete this task?", isPresented: $showingDeleteAlert, actions: {
+            Button("Delete", role: .destructive) {
+                if let task = task {
+                    modelContext.delete(task)
+                    try? modelContext.save() // ensure persistence before popping
+                    
+                    path = NavigationPath()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        })
         .toolbar {
             
             ToolbarItem(placement: .automatic) {
@@ -249,3 +293,4 @@ struct AddTask: View {
         }
     }
 }
+

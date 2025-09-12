@@ -16,6 +16,7 @@ struct AddProjectRoute: Hashable {
     let project: Project?
 }
 
+
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -33,7 +34,7 @@ struct RootView: View {
                         TaskDetail(task: task)
                     }
                     .navigationDestination(for: AddTaskRoute.self) { route in
-                        AddTask(task: route.task)
+                        AddTask(task: route.task, path: $pathTasks)
                     }
             }
             .tabItem {
@@ -46,7 +47,7 @@ struct RootView: View {
                         ProjectDetail(project: project)
                     }
                     .navigationDestination(for: AddProjectRoute.self) { route in
-                        AddProject(project: route.project)
+                        AddProject(project: route.project, path: $pathProjects)
                     }
                 
             }
