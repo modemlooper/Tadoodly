@@ -48,6 +48,44 @@ struct AddProject: View {
             }
             
         }
+        .alert("Are you sure you want to duplicate this project?", isPresented: $showingCopyAlert, actions: {
+            Button("Duplicate", role: .destructive) {
+                if let project = project {
+                    // Manually duplicate the project since `copy(modelcontext:)` doesn't exist
+                    let duplicate = Project()
+                    // Copy scalar properties
+                    duplicate.name = project.name + " Copy"
+                    duplicate.projectDescription = project.projectDescription
+                    duplicate.dueDate = project.dueDate
+                    duplicate.status = project.status
+                    duplicate.priority = project.priority
+                    duplicate.color = project.color
+                    duplicate.icon = project.icon
+
+                    // Deep copy tasks if any
+                    if let tasks = project.tasks, !tasks.isEmpty {
+                        var newTasks: [UserTask] = []
+                        newTasks.reserveCapacity(tasks.count)
+                        for task in tasks {
+                            let newTask = UserTask()
+                            newTask.title = task.title
+                            newTask.isCompleted = task.isCompleted
+                            newTask.dueDate = task.dueDate
+                            newTask.priority = task.priority
+                            newTasks.append(newTask)
+                        }
+                        duplicate.tasks = newTasks
+                    }
+
+                    // Insert and save
+                    modelContext.insert(duplicate)
+                    try? modelContext.save()
+                }
+                path = NavigationPath()
+            }
+            
+            Button("Cancel", role: .cancel) { }
+        })
         .alert("Are you sure you want to delete this project?", isPresented: $showingDeleteAlert, actions: {
             Button("Delete", role: .destructive) {
                 if let project = project {
@@ -61,7 +99,7 @@ struct AddProject: View {
         })
         .toolbar {
             
-            if project == nil {
+            if project != nil {
                 ToolbarItem(placement: .automatic) {
                     Button {
                         handleCopyTap()
@@ -71,18 +109,16 @@ struct AddProject: View {
                 }
             }
             
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    handleDeleteTap()
-                } label: {
-                    Label("Delete", systemImage: "trash")
+            if project != nil {
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        handleDeleteTap()
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
-            
-            if #available(iOS 26.0, *) {
-                ToolbarSpacer()
-            }
-            
+                        
             // Custom back button that replaces the system one
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
