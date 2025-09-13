@@ -43,7 +43,7 @@ struct ProjectList: View {
                                 .highPriorityGesture(
                                     TapGesture(count: 2).onEnded {
                                         // Navigate to edit on double-tap
-                                        path.append(project)
+                                        //path.append(project)
                                         path.append(AddProjectRoute(project: project))
                                     }
                                 )

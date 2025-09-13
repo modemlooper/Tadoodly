@@ -10,6 +10,10 @@ import SwiftData
 
 @main
 struct TadoodlyApp: App {
+    
+    @AppStorage("isDarkMode") private var isDarkMode: Bool = false
+    @AppStorage("didInitializeColorScheme") private var didInitializeColorScheme: Bool = false
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Project.self,
@@ -29,6 +33,14 @@ struct TadoodlyApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .onAppear {
+                    // Optional: mirror system on first launch
+                    if !didInitializeColorScheme {
+                        isDarkMode = (UITraitCollection.current.userInterfaceStyle == .dark)
+                        didInitializeColorScheme = true
+                    }
+                }
+                .preferredColorScheme(isDarkMode ? .dark : .light)
         }
         .modelContainer(sharedModelContainer)
     }

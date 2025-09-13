@@ -5,7 +5,60 @@ struct TaskList: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var tasks: [UserTask]
+
     @Binding var path: NavigationPath
+    @Binding var selectedSortOption: TaskListSortOption
+    
+    @State private var showingAddTask = false
+    @State private var showingOptionsPopover = false
+    @State private var showingProjectAssist = false
+    @State private var isSortDisclosureExpanded = false
+    @State private var isExpanded = false
+    @State private var scrollToTopTrigger: Bool = false
+    
+    @State private var showCompleted: Bool = false
+    @AppStorage("showCompleted") private var showCompletedSetting: Bool = false
+    
+    // Computed property to sort tasks based on selected option
+    private var sortedTasks: [UserTask] {
+        // Filter based on persisted setting: hide completed unless showCompletedSetting is true
+        let visibleTasks = showCompletedSetting ? tasks : tasks.filter { !$0.completed }
+        switch selectedSortOption {
+        case .updateAt:
+            return visibleTasks.sorted { ($0.updatedAt) > ($1.updatedAt) }
+        case .createdAt:
+            return visibleTasks.sorted { $0.createdAt > $1.createdAt }
+        case .dueDate:
+            return visibleTasks.sorted { task1, task2 in
+                switch (task1.dueDate, task2.dueDate) {
+                case (nil, nil): return false
+                case (nil, _): return false
+                case (_, nil): return true
+                case let (date1?, date2?): return date1 < date2
+                }
+            }
+        case .priority:
+            return visibleTasks.sorted { task1, task2 in
+                let priority1 = task1.priority?.sortOrder ?? -1
+                let priority2 = task2.priority?.sortOrder ?? -1
+                return priority1 > priority2
+            }
+        case .title:
+            return visibleTasks.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .status:
+            return visibleTasks.sorted { task1, task2 in
+                let status1 = task1.status?.rawValue ?? ""
+                let status2 = task2.status?.rawValue ?? ""
+                return status1.localizedCaseInsensitiveCompare(status2) == .orderedAscending
+            }
+        case .projectName:
+            return visibleTasks.sorted { task1, task2 in
+                let project1 = task1.project?.name ?? ""
+                let project2 = task2.project?.name ?? ""
+                return project1.localizedCaseInsensitiveCompare(project2) == .orderedAscending
+            }
+        }
+    }
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -29,7 +82,7 @@ struct TaskList: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 3) {
-                            ForEach(tasks, id: \.id) { task in
+                            ForEach(sortedTasks, id: \.id) { task in
                                 NavigationLink(value: task) {
                                     TaskRow(task: task)
                                         .contentShape(Rectangle())
@@ -37,7 +90,7 @@ struct TaskList: View {
                                         .highPriorityGesture(
                                             TapGesture(count: 2).onEnded {
                                                 // Navigate to edit on double-tap
-                                                path.append(task)
+                                                //path.append(task)
                                                 path.append(AddTaskRoute(task: task))
                                             }
                                         )
@@ -65,13 +118,23 @@ struct TaskList: View {
                     ToolbarSpacer()
                 }
             #endif
+                
                 ToolbarItem {
                     Button {
-                        
+                        isSortDisclosureExpanded = false
+                        showingOptionsPopover = true
                     } label: {
                         Label("View Options", systemImage: "line.3.horizontal.decrease")
                     }
+                    .popover(isPresented: $showingOptionsPopover) {
+                        TaskListOptionsPopover(
+                            selectedSortOption: $selectedSortOption,
+                            isExpanded: $isExpanded,
+                            isPopoverPresented: $showingOptionsPopover, path: $path
+                        )
+                    }
                 }
+                
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(value: AddTaskRoute(task: nil)) {
                         Label("Add Task", systemImage: "plus")
@@ -104,7 +167,15 @@ struct TaskRow: View {
             }
             
             VStack(alignment: .leading, spacing: 15) {
-                StatusChip(task: task)
+                
+                HStack(alignment: .top) {
+                    StatusChip(task: task)
+                    Spacer()
+                    if task.isActive {
+                        Image(systemName: "play.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
                 Text(task.title)
                     .font(.title3)
@@ -151,10 +222,10 @@ struct TaskRow: View {
                     
                     Spacer()
                 }
-                
+        
                 Divider()
             }
-            .padding(.leading)
+            .padding(.horizontal)
             .padding(.top)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

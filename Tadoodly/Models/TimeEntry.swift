@@ -20,28 +20,4 @@ final class TimeEntry {
     var task: UserTask? = nil
     
     init() {}
-    
-    public func stop() {
-        endTime = Date()
-        if let endTime = endTime {
-            duration = endTime.timeIntervalSince(startTime)
-        }
-    }
-    
-    public var isActive: Bool {
-        endTime == nil
-    }
-}
-
-func deleteTimeEntryAndUpdateTask(timeEntryToDelete: TimeEntry, modelContext: ModelContext) {
-    
-    modelContext.delete(timeEntryToDelete)
-    
-    do {
-        try modelContext.save()
-        // Successfully saved. TaskRow should now reflect the deletion.
-    } catch {
-        // Log the error or handle it as appropriate for your app's error strategy.
-        print("Error saving model context: \(error.localizedDescription)")
-    }
 }

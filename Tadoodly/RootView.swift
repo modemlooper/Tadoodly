@@ -15,6 +15,8 @@ struct AddTaskRoute: Hashable {
 struct AddProjectRoute: Hashable {
     let project: Project?
 }
+struct SettingstRoute: Hashable {}
+struct TimeRoute: Hashable {}
 
 
 struct RootView: View {
@@ -24,17 +26,22 @@ struct RootView: View {
     @State private var pathProjects = NavigationPath()
     @State private var pathStats = NavigationPath()
     @State private var pathSchedule = NavigationPath()
+    
+    @State private var selectedSortOption: TaskListSortOption = .updateAt
 
     var body: some View {
         TabView {
 
             NavigationStack(path: $pathTasks) {
-                TaskList(path: $pathTasks)
+                TaskList(path: $pathTasks, selectedSortOption: $selectedSortOption)
                     .navigationDestination(for: UserTask.self) { task in
                         TaskDetail(task: task)
                     }
                     .navigationDestination(for: AddTaskRoute.self) { route in
                         AddTask(task: route.task, path: $pathTasks)
+                    }
+                    .navigationDestination(for: SettingstRoute.self) { _ in
+                        SettingsView(path: $pathTasks)
                     }
             }
             .tabItem {
@@ -63,8 +70,14 @@ struct RootView: View {
                 Label("Stats", systemImage: "chart.bar.xaxis")
             }
             
-            NavigationStack() {
-                Text("Schedule")
+            NavigationStack(path: $pathSchedule) {
+                ScheduleView(path: $pathSchedule)
+                    .navigationDestination(for: UserTask.self) { task in
+                        TaskDetail(task: task)
+                    }
+                    .navigationDestination(for: AddTaskRoute.self) { route in
+                        AddTask(task: route.task, path: $pathTasks)
+                    }
                 
             }
             .tabItem {
@@ -72,6 +85,10 @@ struct RootView: View {
             }
             
         }
+        .tabViewBottomAccessory() {
+            TimerBarView()
+        }
+        
     }
 }
 

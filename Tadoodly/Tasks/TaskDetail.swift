@@ -57,6 +57,21 @@ struct TaskDetail: View {
                     }
                     
                     Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        if let task = task {
+                            TimeCounterView(
+                                task: task,
+                                fontSize: 18
+                            )
+                            .padding(.bottom, 10)
+                            
+                            TimeButtonView(
+                                task: task,
+                                fontSize: 48
+                            )
+                        }
+                    }
                 }
                 
                 

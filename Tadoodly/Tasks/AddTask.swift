@@ -38,6 +38,7 @@ struct AddTask: View {
             prioritySection
             completedSection
             projectSection
+            timeTrackingSection
             checklistSection
         }
         .onAppear() {
@@ -189,7 +190,16 @@ struct AddTask: View {
     }
     
     private var completedSection: some View {
-        Toggle(isOn: $workingTask.completed) {
+        Toggle(isOn: Binding<Bool>(
+            get: { workingTask.completed },
+            set: { newValue in
+                workingTask.completed = newValue
+                // When toggled on, set status to .completed
+                if newValue {
+                    workingTask.status = .done
+                }
+            }
+        )) {
             Text("Completed")
         }
     }
@@ -204,25 +214,16 @@ struct AddTask: View {
         .disabled(projects.isEmpty)
     }
     
-    private var sectionHeader: some View {
-        HStack(spacing: 16) {
-            Spacer()
-            
-            Image(systemName: "document.on.document")
-                .font(.title2)
-                .foregroundColor(.secondary)
-                .onTapGesture {
-                    showingCopyAlert = true
+    private var timeTrackingSection: some View {
+        Group {
+            if let task = task {
+                NavigationLink {
+                    TimeEntriesView(task: task)
+                } label: {
+                    Text("Time Tracking")
                 }
-            
-            Image(systemName: "trash")
-                .font(.title2)
-                .foregroundColor(.red)
-                .onTapGesture {
-                    showingDeleteAlert = true
-                }
+            }
         }
-        .frame(maxWidth: .infinity)
     }
     
     private var checklistSection: some View {
