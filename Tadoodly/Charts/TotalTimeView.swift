@@ -17,9 +17,21 @@ struct TotalTimeView: View {
         let now = Date()
         let startOfDay = calendar.startOfDay(for: now)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
-        return timeEntries.filter {
-            $0.date >= startOfDay && $0.date < endOfDay
-        }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
+        
+        let todayEntries = timeEntries.filter {
+            $0.startTime >= startOfDay && $0.startTime < endOfDay
+        }
+        
+        print("DEBUG: Today entries count: \(todayEntries.count)")
+        print("DEBUG: All entries count: \(timeEntries.count)")
+        print("DEBUG: Start of day: \(startOfDay)")
+        print("DEBUG: End of day: \(endOfDay)")
+        
+        for entry in timeEntries.prefix(3) {
+            print("DEBUG: Entry startTime: \(entry.startTime), duration: \(entry.endTime.timeIntervalSince(entry.startTime))")
+        }
+        
+        return todayEntries.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
     private var currentWeekTotalSeconds: TimeInterval {
@@ -27,7 +39,7 @@ struct TotalTimeView: View {
         let now = Date()
         guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else { return 0 }
         return timeEntries.filter {
-            $0.date >= weekInterval.start && $0.date < weekInterval.end
+            $0.startTime >= weekInterval.start && $0.startTime < weekInterval.end
         }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
@@ -36,16 +48,16 @@ struct TotalTimeView: View {
         let now = Date()
         guard let monthInterval = calendar.dateInterval(of: .month, for: now) else { return 0 }
         return timeEntries.filter {
-            $0.date >= monthInterval.start && $0.date < monthInterval.end
+            $0.startTime >= monthInterval.start && $0.startTime < monthInterval.end
         }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
     private var currentYearTotalSeconds: TimeInterval {
         let calendar = Calendar.current
         let now = Date()
-        guard let monthInterval = calendar.dateInterval(of: .year, for: now) else { return 0 }
+        guard let yearInterval = calendar.dateInterval(of: .year, for: now) else { return 0 }
         return timeEntries.filter {
-            $0.date >= monthInterval.start && $0.date < monthInterval.end
+            $0.startTime >= yearInterval.start && $0.startTime < yearInterval.end
         }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime)}
     }
     

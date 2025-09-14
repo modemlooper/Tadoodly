@@ -58,8 +58,10 @@ struct TimeButtonView: View {
                     // Start this task: mark active and create a new open time entry
                     // Create a new open time entry with current start time
                     let newEntry = TimeEntry()
-                    newEntry.startTime = Date()
+                    let startDate = Date()
+                    newEntry.startTime = startDate
                     newEntry.endTime = .distantFuture
+                    newEntry.date = startDate
 
                     if task.timeEntries == nil {
                         task.timeEntries = [TimeEntry]()

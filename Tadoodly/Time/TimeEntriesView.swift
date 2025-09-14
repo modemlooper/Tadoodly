@@ -35,6 +35,10 @@ struct TimeEntriesView: View {
                 Button {
                     // Create a new time entry and add it to the task
                     let newEntry = TimeEntry()
+                    let now = Date()
+                    newEntry.startTime = now
+                    newEntry.endTime = now
+                    newEntry.date = now
                     if task.timeEntries == nil {
                         task.timeEntries = []
                     }
