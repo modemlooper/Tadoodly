@@ -77,11 +77,18 @@ struct RootView: View {
                         AddProject(project: route.project, path: $pathProjects)
                     }
                     .navigationDestination(for: AddTaskRoute.self) { route in
-                        AddTask(task: route.task, path: $pathTasks)
+                        AddTask(task: route.task, path: $pathProjects)
                     }
                     .navigationDestination(for: TimeRoute.self) { route in
                         if let task = route.task {
-                            TimeEntriesView(path: $pathTasks, task: task)
+                            TimeEntriesView(path: $pathProjects, task: task)
+                        }
+                    }
+                    .navigationDestination(for: AddTimeRoute.self) { route in
+                        if let entry = route.timeEntry {
+                            AddTimeEntry(path: $pathProjects, timeEntry: entry)
+                        } else {
+                            AddTimeEntry(path: $pathProjects)
                         }
                     }
                 

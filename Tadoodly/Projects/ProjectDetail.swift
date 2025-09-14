@@ -86,6 +86,15 @@ struct ProjectDetail: View {
                     TaskRow(task: task)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets())
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) {
+                            // Double-tap: go to edit
+                            path.append(AddTaskRoute(task: task))
+                        }
+                        .onTapGesture {
+                            // Single-tap: go to detail
+                            path.append(task)
+                        }
                 }
             } else {
                 ContentUnavailableView(
