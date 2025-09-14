@@ -96,8 +96,7 @@ struct AddTask: View {
             Button("Cancel", role: .cancel) {}
         })
         .alert("Title required", isPresented: $showTitleRequiredUnsavedAlert) {
-            Button("Enter Title") {
-                // Keep the view open and focus the title field
+            Button("Enter Title", role: .cancel) {
                 titleFieldFocused = true
             }
             Button("Delete", role: .destructive) {
@@ -109,7 +108,6 @@ struct AddTask: View {
                 // New task: nothing persisted yet, just dismiss
                 dismiss()
             }
-            Button("Cancel", role: .cancel) {}
         } message: {
             Text("Please enter a title for this task or delete it.")
         }

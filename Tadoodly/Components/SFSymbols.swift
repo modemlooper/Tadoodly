@@ -29,32 +29,35 @@ struct SFSymbolPicker: View {
     }
     
     var body: some View {
-        VStack {
-            TextField("Search icons", text: $searchText)
-                .padding(.horizontal)
-                .textFieldStyle(.roundedBorder)
-            
-            ScrollView {
-                LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 4), spacing: 24) {
-                    ForEach(filteredSymbols, id: \.self) { symbol in
-                        Button {
-                            selectedSymbol = symbol
-                            dismiss()
-                        } label: {
-                            VStack {
-                                Image(systemName: symbol)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 32, height: 32)
-                                    .foregroundColor(selectedSymbol == symbol ? Color.accentColor : .secondary)
+        NavigationStack {
+            VStack {
+                ScrollView {
+                    LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 4), spacing: 24) {
+                        ForEach(filteredSymbols, id: \.self) { symbol in
+                            Button {
+                                selectedSymbol = symbol
+                                dismiss()
+                            } label: {
+                                VStack {
+                                    Image(systemName: symbol)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 32, height: 32)
+                                        .foregroundColor(selectedSymbol == symbol ? Color.accentColor : .secondary)
+                                }
+                                .padding(4)
                             }
-                            .padding(4)
                         }
                     }
+                    .padding()
                 }
-                .padding()
+            }
+            .toolbar {
+                TextField("Search icons", text: $searchText)
+                    .padding(.horizontal)
+                    .textFieldStyle(.plain)
             }
         }
-        .padding(.top)
+   
     }
 }

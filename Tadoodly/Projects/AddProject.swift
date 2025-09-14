@@ -18,11 +18,15 @@ struct AddProject: View {
     @Binding var path: NavigationPath
     
     @State private var showingDeleteAlert = false
+    @State private var showTitleRequiredUnsavedAlert = false
+    @State private var showingDeleteProjectItemAlert = false
     @State private var showingTaskDeleteAlert = false
     @State private var showingCopyAlert = false
     @State private var taskToDelete: UserTask? = nil
+ 
 
     @FocusState private var focusedTaskIndex: Int?
+    @FocusState private var titleFieldFocused: Bool
 
     @State private var showNameRequiredUnsavedAlert = false
     @State private var showSaveProjectFirstAlert = false
@@ -48,6 +52,7 @@ struct AddProject: View {
                     }
                 )
             )
+            .presentationDragIndicator(.visible)
         }
         .onAppear() {
             if let project = project {
@@ -107,6 +112,23 @@ struct AddProject: View {
             }
             Button("Cancel", role: .cancel) {}
         })
+        .alert("Title required", isPresented: $showTitleRequiredUnsavedAlert) {
+            Button("Enter Title", role: .cancel) {
+                titleFieldFocused = true
+            }
+            Button("Delete", role: .destructive) {
+                if let project = project {
+                    // Existing task: delete it
+                    modelContext.delete(project)
+                    try? modelContext.save()
+                }
+                // New task: nothing persisted yet, just dismiss
+                dismiss()
+            }
+     
+        } message: {
+            Text("Please enter a title for this project or delete it.")
+        }
         .toolbar {
             
             if project != nil {
@@ -150,7 +172,7 @@ struct AddProject: View {
     private var projectDetailsSection: some View {
         Section() {
             TextField(
-                "Project Name",
+                "Title (required)",
                 text: Binding<String>(
                     get: { workingProject.name },
                     set: { newValue in
@@ -160,7 +182,7 @@ struct AddProject: View {
             )
          
             TextField(
-                "Description (Optional)",
+                "Description",
                 text: Binding<String>(
                     get: { workingProject.projectDescription ?? "" },
                     set: { newValue in
@@ -244,6 +266,7 @@ struct AddProject: View {
                     HStack(spacing: 8) {
                         Image(systemName: (workingProject.icon.isEmpty == false ? workingProject.icon : "folder"))
                             .foregroundColor(.accentColor)
+                            .font(.title2)
                     }
                 }
                 .contentShape(Rectangle())
@@ -308,30 +331,26 @@ struct AddProject: View {
     
     // MARK: - Back Button Handling
     private func handleBackButtonTap() {
-        let nameIsEmpty = workingProject.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         
-        // If creating a new project and the name is empty, just go back without saving
-        if project == nil && nameIsEmpty {
-            dismiss()
+        if workingProject.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            showTitleRequiredUnsavedAlert = true
+            titleFieldFocused = true
             return
         }
         
-        // Otherwise, save the working project
         if project == nil {
-            // New project with a non-empty name: insert then save
+            // Create new task
             modelContext.insert(workingProject)
-        } else {
-            // Editing existing project: ensure changes are persisted
-            // (workingProject already points to the existing model)
         }
         
         do {
             try modelContext.save()
             dismiss()
         } catch {
-            // Handle save error: keep the view open and optionally present an alert/log
-            print("Failed to save project: \(error)")
+            // Replace with your UI error handling if desired
+            print("Failed to save model context: \(error)")
         }
+        
     }
  
 }
