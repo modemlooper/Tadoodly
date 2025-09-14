@@ -55,23 +55,6 @@ struct SFSymbolPicker: View {
                 .padding()
             }
         }
-        .navigationTitle("Pick an icon")
+        .padding(.top)
     }
 }
-
-// Usage example elsewhere:
-// @State private var chosenSymbol: String = "star"
-// SFSymbolPicker(selectedSymbol: $chosenSymbol)
-
-
-struct SFSymbolPickerPreviewContainer: View {
-    @State private var chosenSymbol: String = "star"
-    var body: some View {
-        SFSymbolPicker(selectedSymbol: $chosenSymbol)
-    }
-}
-
-#Preview {
-    SFSymbolPickerPreviewContainer()
-}
-

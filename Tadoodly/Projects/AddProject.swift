@@ -39,6 +39,16 @@ struct AddProject: View {
             ColorSection
             AddTaskSection
         }
+        .sheet(isPresented: $showSymbolPicker) {
+            SFSymbolPicker(
+                selectedSymbol: Binding(
+                    get: { workingProject.icon },
+                    set: { newValue in
+                        workingProject.icon = newValue
+                    }
+                )
+            )
+        }
         .onAppear() {
             if let project = project {
                 // Copy values from existing project to our working project
@@ -239,16 +249,6 @@ struct AddProject: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-        }
-        .sheet(isPresented: $showSymbolPicker) {
-            SFSymbolPicker(
-                selectedSymbol: Binding(
-                    get: { workingProject.icon },
-                    set: { newValue in
-                        workingProject.icon = newValue
-                    }
-                )
-            )
         }
     }
     

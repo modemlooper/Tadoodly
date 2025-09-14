@@ -141,7 +141,7 @@
 		2D2FF7372E6DF1B1001010B8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = tadoodly;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Tadoodly/Tadoodly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -182,7 +182,7 @@
 		2D2FF7382E6DF1B1001010B8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = tadoodly;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Tadoodly/Tadoodly.entitlements;
 				CODE_SIGN_STYLE = Automatic;
