@@ -108,15 +108,20 @@ struct TaskList: View {
             .toolbar {
             #if canImport(FoundationModels)
                 ToolbarItem(placement: .automatic) {
-                        Button {
-                            
-                        } label: {
-                            Label("AI Assist", systemImage: "sparkles")
-                        }
+                    Button {
+                        showingProjectAssist = true
+                    } label: {
+                        Label("AI Assist", systemImage: "sparkles")
+                    }
+                    .sheet(isPresented: $showingProjectAssist) {
+                        ProjectAssistSheet()
+                            .presentationDetents([.large])
+                            .presentationDragIndicator(.visible)
+                    }
                 }
-                if #available(iOS 26.0, *) {
-                    ToolbarSpacer()
-                }
+               
+                ToolbarSpacer()
+                
             #endif
                 
                 ToolbarItem {

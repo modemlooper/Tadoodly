@@ -12,7 +12,7 @@ struct ProjectList: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    @Query private var projects: [Project]
+    @Query(sort: [SortDescriptor(\Project.createdAt, order: .reverse)]) private var projects: [Project]
     @Binding var path: NavigationPath
     
     var body: some View {
