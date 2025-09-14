@@ -19,7 +19,7 @@ struct TotalTimeView: View {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
         return timeEntries.filter {
             $0.date >= startOfDay && $0.date < endOfDay
-        }.reduce(0) { $0 + $1.duration }
+        }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
     private var currentWeekTotalSeconds: TimeInterval {
@@ -28,7 +28,7 @@ struct TotalTimeView: View {
         guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else { return 0 }
         return timeEntries.filter {
             $0.date >= weekInterval.start && $0.date < weekInterval.end
-        }.reduce(0) { $0 + $1.duration }
+        }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
     private var currentMonthTotalSeconds: TimeInterval {
@@ -37,7 +37,7 @@ struct TotalTimeView: View {
         guard let monthInterval = calendar.dateInterval(of: .month, for: now) else { return 0 }
         return timeEntries.filter {
             $0.date >= monthInterval.start && $0.date < monthInterval.end
-        }.reduce(0) { $0 + $1.duration }
+        }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime) }
     }
     
     private var currentYearTotalSeconds: TimeInterval {
@@ -46,7 +46,7 @@ struct TotalTimeView: View {
         guard let monthInterval = calendar.dateInterval(of: .year, for: now) else { return 0 }
         return timeEntries.filter {
             $0.date >= monthInterval.start && $0.date < monthInterval.end
-        }.reduce(0) { $0 + $1.duration }
+        }.reduce(0) { $0 + $1.endTime.timeIntervalSince($1.startTime)}
     }
     
     private func formattedTime(_ seconds: TimeInterval) -> String {

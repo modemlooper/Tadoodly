@@ -62,10 +62,12 @@ struct DailyAverageView: View {
         let allDays: [Date] = stride(from: start, through: end, by: 60*60*24).map { calendar.startOfDay(for: $0) }
         let filteredEntries = timeEntries.filter { $0.date >= start && $0.date <= end }
         let grouped = Dictionary(grouping: filteredEntries) { calendar.startOfDay(for: $0.date) }
-        let totals = grouped.mapValues { $0.reduce(0) { $0 + $1.duration / 3600 } }
+        let totals = grouped.mapValues { $0.reduce(0) { $0 + ($1.endTime.timeIntervalSince($1.startTime) / 3600) } }
+        
         let newAggregatedData = allDays.map { day in DataPoint(date: day, value: totals[day] ?? 0) }.sorted { $0.date < $1.date }
         let sum = newAggregatedData.reduce(0) { $0 + $1.value }
-        let newDailyAverage = newAggregatedData.isEmpty ? 0 : sum / Double(newAggregatedData.count)
+        let daysWithEntries = totals.count
+        let newDailyAverage = daysWithEntries == 0 ? 0 : sum / Double(daysWithEntries)
         await MainActor.run {
             self.aggregatedData = newAggregatedData
             self.dailyAverage = newDailyAverage
@@ -73,11 +75,6 @@ struct DailyAverageView: View {
     }
     
     var body: some View {
-        let combinedData = aggregatedData.flatMap { [
-            CombinedPoint(date: $0.date, value: $0.value, series: .daily),
-            CombinedPoint(date: $0.date, value: dailyAverage, series: .average)
-        ] }
-        
         ZStack {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(colorScheme == .dark ? Color(white: 0.12) : .white)
@@ -94,17 +91,27 @@ struct DailyAverageView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.bottom, 6)
-                
+
                 Chart {
-                    ForEach(combinedData) { point in
+                    ForEach(aggregatedData) { point in
                         LineMark(
                             x: .value("Date", point.date),
                             y: .value("Value", point.value)
                         )
-                        .interpolationMethod(.catmullRom)
-                        .foregroundStyle(by: .value("Series", point.series.rawValue))
+                        .interpolationMethod(.stepCenter)
+                        .foregroundStyle(.blue)
                         
+                        AreaMark(
+                            x: .value("Date", point.date),
+                            y: .value("Value", point.value)
+                        )
+                        .interpolationMethod(.stepCenter)
+                        .foregroundStyle(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.5), Color.blue.opacity(0.0)]), startPoint: .top, endPoint: .bottom))
                     }
+
+                    RuleMark(y: .value("Average", dailyAverage))
+                        .foregroundStyle(.green)
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
                 }
                 .chartLegend(.hidden)
                 .chartYAxis() {
@@ -157,21 +164,4 @@ struct RangePicker: View {
         .background(Color(.systemGray5).opacity(0.1))
         .clipShape(Capsule())
     }
-}
-
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TimeEntry.self, configurations: config)
-    let context = container.mainContext
-    let calendar = Calendar.current
-    let now = Date()
-    // Add 30 days of entries with varying durations (0 to 4 hours)
-    for i in 0..<60 {
-        let entry = TimeEntry()
-        let entryDate = calendar.date(byAdding: .day, value: -i, to: now) ?? now
-        entry.date = calendar.startOfDay(for: entryDate)
-        entry.duration = Double.random(in: 0...8*3600) // 0–4 hours
-        context.insert(entry)
-    }
-    return DailyAverageView().modelContainer(container)
 }

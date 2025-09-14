@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import Charts
 import Foundation
+import Playgrounds
 
 struct LineChartView: View {
     
@@ -25,18 +26,35 @@ struct LineChartView: View {
     
     private var entriesByDay: [(date: Date, totalDuration: Double)] {
         let calendar = Calendar.current
-        let today = calendar.date(byAdding: .weekOfYear, value: weekOffset, to: Date())!
-        let startOfToday = calendar.startOfDay(for: today)
-        let days: [Date] = (0..<7).map { calendar.date(byAdding: .day, value: -$0, to: startOfToday)! }.reversed()
+        let currentWeekDate = calendar.date(byAdding: .weekOfYear, value: weekOffset, to: Date())!
+        let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentWeekDate) ?? calendar.dateInterval(of: .weekOfMonth, for: currentWeekDate)!
+        let startOfWeek = weekInterval.start
+        let endOfWeek = calendar.date(byAdding: .day, value: 7, to: startOfWeek) ?? weekInterval.end
         
-        let grouped = Dictionary(grouping: timeEntries) { entry in
-            calendar.startOfDay(for: entry.date)
+        // Create array of 7 days for the week
+        let days: [Date] = (0..<7).map { calendar.date(byAdding: .day, value: $0, to: startOfWeek)! }
+        
+        // Filter time entries for the current week using startTime
+        let weekTimeEntries = timeEntries.filter { entry in
+            let entryStartDate = calendar.startOfDay(for: entry.startTime)
+            return entryStartDate >= startOfWeek && entryStartDate < endOfWeek
         }
+        
+        // Group time entries by day using startTime
+        let grouped = Dictionary(grouping: weekTimeEntries) { entry in
+            calendar.startOfDay(for: entry.startTime)
+        }
+        
+        // Calculate total duration for each day
         let actuals: [Date: Double] = grouped.mapValues { entries in
-            entries.reduce(0) { $0 + ($1.duration / 3600) }
+            entries.reduce(0.0) { total, entry in
+                let entryDuration = entry.endTime.timeIntervalSince(entry.startTime) / 3600.0 // Convert to hours
+                return total + entryDuration
+            }
         }
+        
         return days.map { date in
-            (date: date, totalDuration: actuals[date] ?? 0)
+            (date: date, totalDuration: actuals[date] ?? 0.0)
         }
     }
     
@@ -138,6 +156,7 @@ struct LineChartView: View {
                 }
                 .padding()
                 .chartYAxis(.hidden)
+
             }
             
         }
