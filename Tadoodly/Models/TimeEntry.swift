@@ -10,7 +10,7 @@ import Foundation
 @Model
 final class TimeEntry {
     var startTime: Date = Date()
-    var endTime: Date? = nil
+    var endTime: Date = Date()
     var duration: TimeInterval = 0
     var date: Date = Date()
     var note: String = ""

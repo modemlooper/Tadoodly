@@ -16,7 +16,7 @@ struct AddTask: View {
     @Query(sort: \Project.name) private var projects: [Project]
     
     var task: UserTask?
-    
+ 
     @Binding var path: NavigationPath
     
     @State private var showingCopyAlert = false
@@ -26,6 +26,7 @@ struct AddTask: View {
     @State private var showingDeleteTaskItemAlert = false
     @State private var indexToDeleteTaskItem: Int? = nil
     @FocusState private var focusedItemIndex: Int?
+    @FocusState private var titleFieldFocused: Bool
     
     // Working task instance
     @State private var workingTask = UserTask()
@@ -94,6 +95,24 @@ struct AddTask: View {
             }
             Button("Cancel", role: .cancel) {}
         })
+        .alert("Title required", isPresented: $showTitleRequiredUnsavedAlert) {
+            Button("Enter Title") {
+                // Keep the view open and focus the title field
+                titleFieldFocused = true
+            }
+            Button("Delete", role: .destructive) {
+                if let task = task {
+                    // Existing task: delete it
+                    modelContext.delete(task)
+                    try? modelContext.save()
+                }
+                // New task: nothing persisted yet, just dismiss
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please enter a title for this task or delete it.")
+        }
         .toolbar {
             
             if task != nil {
@@ -138,6 +157,7 @@ struct AddTask: View {
     private var titleSection: some View {
         Section() {
             TextField("Title (required)", text: $workingTask.title)
+                .focused($titleFieldFocused)
             
             TextField("Description", text: Binding(
                 get: { workingTask.taskDescription ?? "" },
@@ -217,11 +237,19 @@ struct AddTask: View {
     private var timeTrackingSection: some View {
         Group {
             if let task = task {
-                NavigationLink {
-                    TimeEntriesView(task: task)
-                } label: {
-                    Text("Time Tracking")
+                Button(action: {
+                    // Push a route for Time Entries via path navigation
+                    path.append(TimeRoute(task: task))
+                }) {
+                    HStack {
+                        Text("Time Tracking")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -277,8 +305,9 @@ struct AddTask: View {
     
     // MARK: - Back Button Handling
     private func handleBackButtonTap() {
-        guard !workingTask.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            dismiss()
+        if workingTask.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            showTitleRequiredUnsavedAlert = true
+            titleFieldFocused = true
             return
         }
         

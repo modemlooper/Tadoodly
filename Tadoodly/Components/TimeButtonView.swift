@@ -36,7 +36,7 @@ struct TimeButtonView: View {
 
                     // End the currently active (open) entry for this task
                     if let entries = task.timeEntries {
-                        if let openIndex = entries.firstIndex(where: { $0.endTime == nil }) {
+                        if let openIndex = entries.firstIndex(where: { $0.endTime == .distantFuture }) {
                             entries[openIndex].endTime = endDate
                         }
                     }
@@ -49,7 +49,7 @@ struct TimeButtonView: View {
                         for otherTask in activeTasks {
                             otherTask.isActive = false
                             if let otherEntries = otherTask.timeEntries,
-                               let openIndex = otherEntries.firstIndex(where: { $0.endTime == nil }) {
+                               let openIndex = otherEntries.firstIndex(where: { $0.endTime == .distantFuture }) {
                                 otherEntries[openIndex].endTime = Date()
                             }
                         }
@@ -59,6 +59,7 @@ struct TimeButtonView: View {
                     // Create a new open time entry with current start time
                     let newEntry = TimeEntry()
                     newEntry.startTime = Date()
+                    newEntry.endTime = .distantFuture
 
                     if task.timeEntries == nil {
                         task.timeEntries = [TimeEntry]()
@@ -79,14 +80,10 @@ struct TimeCounterView: View {
  
     private var elapsedTime: TimeInterval {
         let entries = task.timeEntries ?? []
-
         var total: TimeInterval = 0
         for entry in entries {
-            if let end = entry.endTime {
-                total += max(0, end.timeIntervalSince(entry.startTime))
-            } else {
-                total += max(0, currentTime.timeIntervalSince(entry.startTime))
-            }
+            let endDate = (entry.endTime == .distantFuture) ? currentTime : entry.endTime
+            total += max(0, endDate.timeIntervalSince(entry.startTime))
         }
         return total
     }

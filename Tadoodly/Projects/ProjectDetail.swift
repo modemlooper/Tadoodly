@@ -11,6 +11,7 @@ import SwiftData
 struct ProjectDetail: View {
     
     @Environment(\.modelContext) private var modelContext
+    @Binding var path: NavigationPath
     
     var project: Project
     
@@ -80,10 +81,40 @@ struct ProjectDetail: View {
             
             Divider()
             
-            ForEach(project.tasks ?? []) { task in
-                TaskRow(task: task)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
+            if let tasks = project.tasks, !tasks.isEmpty {
+                ForEach(tasks) { task in
+                    TaskRow(task: task)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
+                }
+            } else {
+                ContentUnavailableView(
+                    "No Tasks",
+                    systemImage: "checklist",
+                    description: Text("Get started by adding a task.")
+                )
+                .padding(.top, 40)
+                
+                Button {
+                    // Create a new task and add it to the project
+                    let newTask = UserTask()
+                    
+                    // Associate the task with this project
+                    // If Project has a tasks relationship, append the new task
+                    if project.tasks == nil {
+                        project.tasks = []
+                    }
+                    project.tasks?.append(newTask)
+                    
+                    // If your model requires insertion into the context explicitly, uncomment:
+                    // modelContext.insert(newTask)
+                    
+                    // Navigate to add/edit task route
+                    path.append(AddTaskRoute(task: newTask))
+                } label: {
+                    Text("Add Task")
+                }
+
             }
         }
         .scrollIndicators(.hidden)

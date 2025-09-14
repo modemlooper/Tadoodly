@@ -274,7 +274,7 @@ struct AddProject: View {
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                   
+                    path.append(task)
                 }
             }
         }
@@ -282,7 +282,20 @@ struct AddProject: View {
     }
     
     private func handleAddTaskTap() {
+        // Create a new task and add it to the working project
+        let newTask = UserTask()
 
+        // Ensure the working project's tasks array exists, then append
+        if workingProject.tasks == nil {
+            workingProject.tasks = []
+        }
+        workingProject.tasks?.append(newTask)
+
+        // If your model requires insertion into the context explicitly, uncomment:
+        // modelContext.insert(newTask)
+
+        // Navigate to add/edit task route
+        path.append(AddTaskRoute(task: newTask))
     }
     
     private func handleCopyTap() {
