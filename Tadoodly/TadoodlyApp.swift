@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import TipKit
 
 @main
 struct TadoodlyApp: App {
@@ -29,19 +30,13 @@ struct TadoodlyApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
-
+    
     var body: some Scene {
         WindowGroup {
             RootView()
-                .onAppear {
-                    // Optional: mirror system on first launch
-                    if !didInitializeColorScheme {
-                        isDarkMode = (UITraitCollection.current.userInterfaceStyle == .dark)
-                        didInitializeColorScheme = true
-                    }
-                }
                 .preferredColorScheme(isDarkMode ? .dark : .light)
         }
         .modelContainer(sharedModelContainer)
+ 
     }
 }

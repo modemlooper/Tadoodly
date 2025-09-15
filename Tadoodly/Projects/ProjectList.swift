@@ -95,7 +95,7 @@ struct ProjectRow: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 8) {
                         Text(project.name)
-                            .font(.title3)
+                            .font(.headline)
                             .fontWeight(.bold)
                     }
                     HStack(spacing: 18) {

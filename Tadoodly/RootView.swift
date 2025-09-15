@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import TipKit
 
 // Navigation Routes
 struct AddTaskRoute: Hashable {
@@ -211,11 +212,20 @@ struct RootView: View {
         }
 
         var body: some View {
+         
             RootView()
                 .modelContainer(container)
         }
     }
 
     return RootPreviewContainer()
+        .task {
+            try? Tips.resetDatastore()
+            try? Tips.configure([
+                .displayFrequency(.immediate),
+                .datastoreLocation(.applicationDefault)
+            ])
+            
+        }
 }
 

@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import FoundationModels
+import TipKit
 
 struct TaskList: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,9 +17,15 @@ struct TaskList: View {
     @State private var isSortDisclosureExpanded = false
     @State private var isExpanded = false
     @State private var scrollToTopTrigger: Bool = false
-    
+    @State private var assistAlert: Bool = false
+    @State private var assistAlertMessage: String = ""
+    @State private var showAssistAgreementAlert: Bool = false
     @State private var showCompleted: Bool = false
+    
     @AppStorage("showCompleted") private var showCompletedSetting: Bool = false
+    @AppStorage("showAssistAgreement") private var showAssistAgreementAcknowledged: Bool = false
+    
+    let tip = AddTaskTip()
     
     // Computed property to sort tasks based on selected option
     private var sortedTasks: [UserTask] {
@@ -105,11 +113,56 @@ struct TaskList: View {
                 }
             }
             .navigationTitle("Tasks")
+            .alert("Project Assist", isPresented: $assistAlert, actions: {
+                Button("Ok", role: .cancel) {}
+            }, message: {
+                Text(assistAlertMessage.isEmpty ? "Apple Intelligence is not enabled" : assistAlertMessage)
+            })
+            .alert("Project Assist", isPresented: $showAssistAgreementAlert, actions: {
+                Button("I Agree") {
+                    showAssistAgreementAcknowledged = true
+                    showingProjectAssist = true
+                }
+                
+                Button("I Disagree", role: .cancel) {}
+                
+            }, message: {
+                Text("Project Assist uses on device Apple Intelligence. AI is an emerging technology. Responses may be incorrect. Please use your best judgement or consult a professional on the topic.")
+            })
             .toolbar {
             #if canImport(FoundationModels)
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        showingProjectAssist = true
+                        if case .available = SystemLanguageModel().availability {
+                            if showAssistAgreementAcknowledged {
+                                showingProjectAssist = true
+                            } else {
+                                showAssistAgreementAlert = true
+                            }
+                        } else if case .unavailable(let reason) = SystemLanguageModel().availability {
+                            switch reason {
+                            case .appleIntelligenceNotEnabled:
+                                // Apple Intelligence is not enabled on the system
+                                print("Apple Intelligence is not enabled")
+                                assistAlertMessage = "Apple Intelligence is not enabled on this device. You can enable it in Settings > Privacy & Security > Apple Intelligence."
+                                assistAlert = true
+                            case .deviceNotEligible:
+                                // Device doesn't support Apple Intelligence
+                                print("Device not eligible for Apple Intelligence")
+                                assistAlertMessage = "This device does not support Apple Intelligence."
+                                assistAlert = true
+                            case .modelNotReady:
+                                // Model isn't available on the device
+                                print("Apple Intelligence model not ready")
+                                assistAlertMessage = "The Apple Intelligence model is not ready yet. Please try again later."
+                                assistAlert = true
+                            @unknown default:
+                                print("Apple Intelligence unavailable for unknown reason")
+                                assistAlertMessage = "Apple Intelligence is unavailable for an unknown reason."
+                                assistAlert = true
+                            }
+                        }
+
                     } label: {
                         Label("AI Assist", systemImage: "sparkles")
                     }
@@ -143,9 +196,18 @@ struct TaskList: View {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(value: AddTaskRoute(task: nil)) {
                         Label("Add Task", systemImage: "plus")
+                            .popoverTip(tip)
+                           
                     }
+                    
+                    if tasks.isEmpty {
+                        TipView(tip, arrowEdge: .bottom)
+                    }
+                   
                 }
+               
             }
+          
         }
     }
 }
@@ -183,7 +245,7 @@ struct TaskRow: View {
                 }
                 
                 Text(task.title)
-                    .font(.title3)
+                    .font(.headline)
                     .fontWeight(.semibold)
                     .lineLimit(2)
                     .truncationMode(.tail)
