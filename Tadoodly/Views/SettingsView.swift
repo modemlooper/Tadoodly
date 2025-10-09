@@ -13,11 +13,32 @@ struct SettingsView: View {
     @Binding var path: NavigationPath
     @State private var showDeleteAlert = false
     @AppStorage("isDarkMode") private var isDarkMode: Bool = false
+    @AppStorage("isAssistEnabled") private var isAssistEnabled: Bool = true
     
     var body: some View {
         List {
             Toggle(isOn: $isDarkMode) {
-                Text("Dark Mode")
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "circle.righthalf.filled.inverse")
+                        .font(Font.system(size: 16))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Dark Mode")
+                    }
+                }
+            }
+            
+            Toggle(isOn: $isAssistEnabled) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(Font.system(size: 18))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("AI Project Assistant")
+                        Text(isAssistEnabled ? "Disable AI project creation assistance"
+                                             : "Enable AI project creation assistance")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             
             Section {

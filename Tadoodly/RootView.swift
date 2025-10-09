@@ -36,7 +36,8 @@ struct RootView: View {
     @State private var selectedSortOption: TaskListSortOption = .updateAt
 
     var body: some View {
-        TabView {
+        // Build the TabView first so we can conditionally apply modifiers
+        let tabHost = TabView {
 
             NavigationStack(path: $pathTasks) {
                 TaskList(path: $pathTasks, selectedSortOption: $selectedSortOption)
@@ -47,18 +48,24 @@ struct RootView: View {
                         AddTask(task: route.task, path: $pathTasks)
                     }
                     .navigationDestination(for: AddTimeRoute.self) { route in
-                        if let entry = route.timeEntry {
-                            AddTimeEntry(path: $pathTasks, timeEntry: entry)
-                        } else {
-                            AddTimeEntry(path: $pathTasks)
+                        Group {
+                            if let entry = route.timeEntry {
+                                AddTimeEntry(path: $pathTasks, timeEntry: entry)
+                            } else {
+                                AddTimeEntry(path: $pathTasks)
+                            }
                         }
                     }
                     .navigationDestination(for: SettingstRoute.self) { _ in
                         SettingsView(path: $pathTasks)
                     }
                     .navigationDestination(for: TimeRoute.self) { route in
-                        if let task = route.task {
-                            TimeEntriesView(path: $pathTasks, task: task)
+                        Group {
+                            if let task = route.task {
+                                TimeEntriesView(path: $pathTasks, task: task)
+                            } else {
+                                Text("No task available.")
+                            }
                         }
                     }
             }
@@ -81,15 +88,21 @@ struct RootView: View {
                         AddTask(task: route.task, path: $pathProjects)
                     }
                     .navigationDestination(for: TimeRoute.self) { route in
-                        if let task = route.task {
-                            TimeEntriesView(path: $pathProjects, task: task)
+                        Group {
+                            if let task = route.task {
+                                TimeEntriesView(path: $pathProjects, task: task)
+                            } else {
+                                Text("No task available.")
+                            }
                         }
                     }
                     .navigationDestination(for: AddTimeRoute.self) { route in
-                        if let entry = route.timeEntry {
-                            AddTimeEntry(path: $pathProjects, timeEntry: entry)
-                        } else {
-                            AddTimeEntry(path: $pathProjects)
+                        Group {
+                            if let entry = route.timeEntry {
+                                AddTimeEntry(path: $pathProjects, timeEntry: entry)
+                            } else {
+                                AddTimeEntry(path: $pathProjects)
+                            }
                         }
                     }
                 
@@ -121,10 +134,15 @@ struct RootView: View {
             }
             
         }
-        .tabViewBottomAccessory() {
-            TimerBarView()
-        }
         
+        if #available(iOS 26.0, *) {
+            tabHost
+                .tabViewBottomAccessory {
+                    TimerBarView()
+                }
+        } else {
+            tabHost
+        }
     }
 }
 

@@ -30,15 +30,18 @@ struct ProjectPlannerView: View {
                 
                 if !model.partialPlans.isEmpty {
                     
-                    Text(model.title)
-                        .contentTransition(.opacity)
-                        .padding()
-                        .font(.title2)
-                    
-                    
-                    Text(model.description)
-                        .contentTransition(.opacity)
-                        .padding()
+                    VStack(spacing: 10)  {
+                        Text(model.title)
+                            .contentTransition(.opacity)
+                            .font(.headline)
+                            .padding(.bottom, 4)
+                        
+                        Text(model.description)
+                            .contentTransition(.opacity)
+                            .font(.subheadline)
+                            
+                    }
+                    .padding()
                     
                 } else {
                     
@@ -126,6 +129,8 @@ struct ProjectPlannerView: View {
                             .map { taskTitle in
                                 let task = UserTask()
                                 task.title = taskTitle
+                                task.status = .todo
+                                task.priority = .low
                                 task.isCompleted = false
                                 return task
                             }
@@ -248,7 +253,9 @@ struct TasksListView: View {
                     HStack(alignment: .top) {
                         Text("\(index + 1).")
                             .padding(.horizontal, 4)
+                            .font(.subheadline)
                         Text("\(model.tasks[index])")
+                            .font(.subheadline)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

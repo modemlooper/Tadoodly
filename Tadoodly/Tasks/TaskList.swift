@@ -24,6 +24,7 @@ struct TaskList: View {
     
     @AppStorage("showCompleted") private var showCompletedSetting: Bool = false
     @AppStorage("showAssistAgreement") private var showAssistAgreementAcknowledged: Bool = false
+    @AppStorage("isAssistEnabled") private var isAssistEnabled: Bool = true
     
     let tip = AddTaskTip()
     
@@ -131,46 +132,50 @@ struct TaskList: View {
             })
             .toolbar {
             #if canImport(FoundationModels)
-                ToolbarItem(placement: .automatic) {
-                    Button {
-                        if case .available = SystemLanguageModel().availability {
-                            if showAssistAgreementAcknowledged {
-                                showingProjectAssist = true
-                            } else {
-                                showAssistAgreementAlert = true
+                
+                if ( isAssistEnabled ) {
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            if case .available = SystemLanguageModel().availability {
+                                if showAssistAgreementAcknowledged {
+                                    showingProjectAssist = true
+                                } else {
+                                    showAssistAgreementAlert = true
+                                }
+                            } else if case .unavailable(let reason) = SystemLanguageModel().availability {
+                                switch reason {
+                                case .appleIntelligenceNotEnabled:
+                                    // Apple Intelligence is not enabled on the system
+                                    print("Apple Intelligence is not enabled")
+                                    assistAlertMessage = "Apple Intelligence is not enabled on this device. You can enable it in Settings > Privacy & Security > Apple Intelligence."
+                                    assistAlert = true
+                                case .deviceNotEligible:
+                                    // Device doesn't support Apple Intelligence
+                                    print("Device not eligible for Apple Intelligence")
+                                    assistAlertMessage = "This device does not support Apple Intelligence."
+                                    assistAlert = true
+                                case .modelNotReady:
+                                    // Model isn't available on the device
+                                    print("Apple Intelligence model not ready")
+                                    assistAlertMessage = "The Apple Intelligence model is not ready yet. Please try again later."
+                                    assistAlert = true
+                                @unknown default:
+                                    print("Apple Intelligence unavailable for unknown reason")
+                                    assistAlertMessage = "Apple Intelligence is unavailable for an unknown reason."
+                                    assistAlert = true
+                                }
                             }
-                        } else if case .unavailable(let reason) = SystemLanguageModel().availability {
-                            switch reason {
-                            case .appleIntelligenceNotEnabled:
-                                // Apple Intelligence is not enabled on the system
-                                print("Apple Intelligence is not enabled")
-                                assistAlertMessage = "Apple Intelligence is not enabled on this device. You can enable it in Settings > Privacy & Security > Apple Intelligence."
-                                assistAlert = true
-                            case .deviceNotEligible:
-                                // Device doesn't support Apple Intelligence
-                                print("Device not eligible for Apple Intelligence")
-                                assistAlertMessage = "This device does not support Apple Intelligence."
-                                assistAlert = true
-                            case .modelNotReady:
-                                // Model isn't available on the device
-                                print("Apple Intelligence model not ready")
-                                assistAlertMessage = "The Apple Intelligence model is not ready yet. Please try again later."
-                                assistAlert = true
-                            @unknown default:
-                                print("Apple Intelligence unavailable for unknown reason")
-                                assistAlertMessage = "Apple Intelligence is unavailable for an unknown reason."
-                                assistAlert = true
-                            }
+                            
+                        } label: {
+                            Label("AI Assist", systemImage: "sparkles")
                         }
-
-                    } label: {
-                        Label("AI Assist", systemImage: "sparkles")
+                        .sheet(isPresented: $showingProjectAssist) {
+                            ProjectAssistSheet()
+                                .presentationDetents([.large])
+                                .presentationDragIndicator(.visible)
+                        }
                     }
-                    .sheet(isPresented: $showingProjectAssist) {
-                        ProjectAssistSheet()
-                            .presentationDetents([.large])
-                            .presentationDragIndicator(.visible)
-                    }
+                    
                 }
                
                 ToolbarSpacer()

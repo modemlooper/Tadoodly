@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 
+@available(iOS 26.0, *)
 struct TimerBarView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
