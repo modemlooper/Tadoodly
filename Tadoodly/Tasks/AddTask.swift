@@ -281,6 +281,21 @@ struct AddTask: View {
                                 get: { workingTask.dueDate ?? Date() },
                                 set: { newValue in
                                     workingTask.dueDate = newValue
+                                    // Cancel the notification
+                                    notificationManager.cancelNotification(id: "task_\(workingTask.id)")
+                                    // Schedule or cancel reminder based on current settings
+                                    if workingTask.reminder {
+                                        Task {
+                                            try await notificationManager.scheduleReminderBeforeDueDate(
+                                                id: "task_\(workingTask.id)",
+                                                title: "Task Due in \(workingTask.reminderAmount) \(workingTask.reminderUnitRaw)",
+                                                body: workingTask.title,
+                                                dueDate: workingTask.dueDate,
+                                                reminderUnitRaw: workingTask.reminderUnitRaw,
+                                                reminderAmount: workingTask.reminderAmount
+                                            )
+                                        }
+                                    }
                                 }
                             ),
                             displayedComponents: [.date, .hourAndMinute]
@@ -365,9 +380,7 @@ struct AddTask: View {
                 message: Text("The due date must be at least \(workingTask.reminderAmount) \(workingTask.reminderUnit.rawValue.lowercased()) in the future."),
                 dismissButton: .default(Text("OK"))
             )
-        }
-        
-        
+        }  
     }
     
     private var statusSection: some View {
