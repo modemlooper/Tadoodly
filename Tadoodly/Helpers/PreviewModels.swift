@@ -1,14 +1,15 @@
-import SwiftUI
+import Foundation
 import SwiftData
 
-struct RootPreviewContainer: View {
-    let container: ModelContainer
-    init() {
+#if DEBUG
+enum PreviewModels {
+    static let container: ModelContainer = {
+        // Include all SwiftData models used by the app in this schema.
+        // At minimum, we know about `Client` from ClientList.swift.
+        let schema = Schema([UserTask.self, Project.self, TaskItem.self, TimeEntry.self, Client.self])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try! ModelContainer(
-            for: UserTask.self, Project.self, TaskItem.self, TimeEntry.self, Client.self,
-            configurations: configuration
-        )
+        let container = try! ModelContainer(for: schema, configurations: [configuration])
+        
         let context = container.mainContext
 
         // Insert sample projects
@@ -20,7 +21,7 @@ struct RootPreviewContainer: View {
             context.insert(proj)
             projectsByName[name] = proj
         }
-
+        
         // Insert sample tasks
         let sampleTasks = ["Buy groceries", "Prepare presentation", "Book dentist appointment"]
         var createdTasks: [UserTask] = []
@@ -80,20 +81,29 @@ struct RootPreviewContainer: View {
             entry3.duration = 90 * 60 // 1.5 hours
             context.insert(entry3)
         }
-        
-        let client = Client()
-        client.name = "Example Client"
-        client.email = "client@example.com"
-        context.insert(client)
-        
-        let client2 = Client()
-        client2.name = "Example Client 2"
-        client2.email = "client2@example.com"
-        context.insert(client2)
-    }
 
-    var body: some View {
-        RootView()
-            .modelContainer(container)
-    }
+        // Seed sample data once if empty
+        do {
+            var descriptor = FetchDescriptor<Client>()
+            descriptor.fetchLimit = 1
+            let existing = try container.mainContext.fetch(descriptor)
+            if existing.isEmpty {
+                let c1 = Client()
+                c1.name = "Example Client"
+                c1.email = "client@example.com"
+
+                let c2 = Client()
+                c2.name = "Example Client 2"
+                c2.email = "client2@example.com"
+
+                container.mainContext.insert(c1)
+                container.mainContext.insert(c2)
+            }
+        } catch {
+            // In previews, it's acceptable to fail silently; we still return the container.
+        }
+
+        return container
+    }()
 }
+#endif

@@ -7,20 +7,20 @@
 
 import SwiftUI
 import SwiftData
-import TipKit
 
 @main
 struct TadoodlyApp: App {
     
     @AppStorage("isDarkMode") private var isDarkMode: Bool = false
     @AppStorage("didInitializeColorScheme") private var didInitializeColorScheme: Bool = false
-    
+        
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Project.self,
             UserTask.self,
             TaskItem.self,
-            TimeEntry.self
+            TimeEntry.self,
+            Client.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

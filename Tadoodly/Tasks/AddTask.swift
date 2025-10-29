@@ -7,16 +7,20 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct AddTask: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @State private var notificationManager = NotificationManager.shared
+    @State private var showPermissionAlert = false
+    
     @Query(sort: \Project.name) private var projects: [Project]
     
     var task: UserTask?
- 
+    
     @Binding var path: NavigationPath
     
     @State private var showingCopyAlert = false
@@ -24,6 +28,7 @@ struct AddTask: View {
     @State private var showNameEmptyAlert = false
     @State private var showTitleRequiredUnsavedAlert = false
     @State private var showingDeleteTaskItemAlert = false
+    @State private var showPastDueDateAlert = false
     @State private var indexToDeleteTaskItem: Int? = nil
     @FocusState private var focusedItemIndex: Int?
     @FocusState private var titleFieldFocused: Bool
@@ -31,10 +36,62 @@ struct AddTask: View {
     // Working task instance
     @State private var workingTask = UserTask()
     
+    @State private var selectedUnit: TimeUnit = .minutes
+    @State private var selectedValue: Int = 5
+    
+    enum TimeUnit: String, CaseIterable {
+        case minutes = "Minutes"
+        case hours = "Hours"
+        case days = "Days"
+        case weeks = "Weeks"
+    }
+    
+    private let minuteOptions = [1, 5, 10, 15, 30, 45]
+    private let hourOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,23]
+    private let dayOptions = [1, 2, 3, 4, 5, 6]
+    private let weekOptions = [1, 2, 3, 4]
+    
+    private var availableValues: [Int] {
+        switch selectedUnit {
+        case .minutes: return minuteOptions
+        case .hours: return hourOptions
+        case .days: return dayOptions
+        case .weeks: return weekOptions
+        }
+    }
+    
+    private var isDueDateInFuture: Bool {
+        guard let dueDate = workingTask.dueDate else { return false }
+        let component: Calendar.Component
+        switch selectedUnit {
+        case .minutes: component = .minute
+        case .hours: component = .hour
+        case .days: component = .day
+        case .weeks: component = .weekOfYear
+        }
+        // Calculate the minimum required future date (now + selectedValue)
+        guard let minimumDate = Calendar.current.date(byAdding: component, value: workingTask.reminderAmount, to: Date()) else { return false }
+        // Due date must be at least as far in the future as the reminder time
+        return dueDate >= minimumDate
+    }
+    
+    private var reminderNotificationDate: Date? {
+        guard let dueDate = workingTask.dueDate else { return nil }
+        let component: Calendar.Component
+        switch selectedUnit {
+        case .minutes: component = .minute
+        case .hours: component = .hour
+        case .days: component = .day
+        case .weeks: component = .weekOfYear
+        }
+        return Calendar.current.date(byAdding: component, value: -selectedValue, to: dueDate)
+    }
+
     var body: some View {
         
         Form {
             titleSection
+            reminderSection
             statusSection
             prioritySection
             completedSection
@@ -50,6 +107,42 @@ struct AddTask: View {
                 // Set defaults for new task
                 workingTask.priority = .low
                 workingTask.status = .todo
+            }
+            
+            // Initialize reminder controls from persisted task values
+            if let existing = task {
+                // map persisted model ReminderUnit to view TimeUnit by rawValue
+                if let unit = TimeUnit(rawValue: existing.reminderUnitRaw) {
+                    selectedUnit = unit
+                } else {
+                    selectedUnit = .minutes
+                }
+                selectedValue = existing.reminderAmount
+                
+                // Check if reminder time is in the past and clear it
+                if existing.reminder, let dueDate = existing.dueDate {
+                    let component: Calendar.Component
+                    switch selectedUnit {
+                    case .minutes: component = .minute
+                    case .hours: component = .hour
+                    case .days: component = .day
+                    case .weeks: component = .weekOfYear
+                    }
+                    
+                    if let notificationDate = Calendar.current.date(byAdding: component, value: -selectedValue, to: dueDate),
+                       notificationDate < Date() {
+                        // Reminder time is in the past, clear it
+                        workingTask.reminder = false
+                        // Cancel the notification
+                        notificationManager.cancelNotification(id: "task_\(existing.id)")
+                        // Save the change
+                        try? modelContext.save()
+                    }
+                }
+            } else {
+                // New task: seed defaults into workingTask so they persist
+                workingTask.reminderUnitRaw = selectedUnit.rawValue
+                workingTask.reminderAmount = selectedValue
             }
             
         }
@@ -112,7 +205,7 @@ struct AddTask: View {
             Text("Please enter a title for this task or delete it.")
         }
         .toolbar {
-            
+                        
             if task != nil {
                 ToolbarItem(placement: .automatic) {
                     Button {
@@ -163,32 +256,130 @@ struct AddTask: View {
             ), axis: .vertical)
             .lineLimit(3...6)
             
-            HStack {
-                if let dueDate = workingTask.dueDate {
-                    DatePicker(
-                        "Due Date",
-                        selection: Binding(
-                            get: { dueDate },
-                            set: { newValue in
-                                workingTask.dueDate = newValue
-                            }
-                        ),
-                        displayedComponents: .date
-                    )
-                    .datePickerStyle(.compact)
+            
+            VStack {
+                Toggle(isOn: Binding<Bool>(
+                    get: { workingTask.dueDate != nil },
+                    set: { newValue in
+                        if newValue {
+                            // If enabling, set to existing date or now
+                            workingTask.dueDate = workingTask.dueDate ?? Date()
+                        } else {
+                            // If disabling, clear date and reset reminder settings
+                            workingTask.dueDate = nil
+                            workingTask.reminder = false
+                            workingTask.reminderAmount = 15
+                            workingTask.reminderUnit = .minutes
+                        }
+                    }
+                )) {
+                    Text("Due Date")
+                }
+                
+                
+                if let _ = workingTask.dueDate {
+                    HStack {
                     
-                    Button("Clear") {
-                        workingTask.dueDate = nil
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { workingTask.dueDate ?? Date() },
+                                set: { newValue in
+                                    workingTask.dueDate = newValue
+                                }
+                            ),
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .labelsHidden()
+                        .datePickerStyle(.compact)
+                        
+                        Spacer()
                     }
-                    .foregroundColor(.red)
-                } else {
-                    Button("Add Due Date") {
-                        workingTask.dueDate = Date()
-                    }
-                    .foregroundColor(.accentColor)
+                    .padding(.top, 10)
                 }
             }
+            
         }
+    }
+    
+    @ViewBuilder private var reminderSection: some View {
+        if let _ = workingTask.dueDate {
+            
+            Section() {
+                
+                ZStack {
+                    Toggle(isOn: Binding<Bool>(
+                        get: { workingTask.reminder },
+                        set: { newValue in
+                            workingTask.reminder = newValue
+                        }
+                    )) {
+                        Text("Add Reminder")
+                    }
+                    .disabled(!isDueDateInFuture)
+                    .onChange(of: workingTask.reminder) { _, newValue in
+                        if newValue {
+                            workingTask.reminderUnitRaw = selectedUnit.rawValue
+                            workingTask.reminderAmount = selectedValue
+                        }
+                    }
+                    
+                    // Invisible overlay to capture taps when disabled
+                    if !isDueDateInFuture {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                showPastDueDateAlert = true
+                            }
+                    }
+                }
+                
+                if workingTask.reminder {
+                    
+                    Picker("Time Unit", selection: $selectedUnit) {
+                        ForEach(TimeUnit.allCases, id: \.self) { unit in
+                            Text(unit.rawValue).tag(unit)
+                        }
+                    }
+                    .onChange(of: selectedUnit) { _, _ in
+                        selectedValue = availableValues.first ?? 1
+                        workingTask.reminderUnitRaw = selectedUnit.rawValue
+                        workingTask.reminderAmount = selectedValue
+                    }
+                    
+                    
+                    Picker("Time Amount", selection: $selectedValue) {
+                        ForEach(availableValues, id: \.self) { value in
+                            Text("\(value)").tag(value)
+                        }
+                    }
+                    .onChange(of: selectedValue) { _, _ in
+                        workingTask.reminderAmount = selectedValue
+                    }
+                    
+                    if isDueDateInFuture {
+                        Text("Notification will be sent \(selectedValue) \(selectedUnit.rawValue.lowercased()) before due date")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Error: Reminder time is in the past. Choose a later due date or shorter reminder time.")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .alert(isPresented: $showPastDueDateAlert) {
+                Alert(
+                    title: Text("Reminder Unavailable"),
+                    message: Text("The due date must be at least \(workingTask.reminderAmount) \(workingTask.reminderUnit.rawValue.lowercased()) in the future."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            
+        } else {
+            EmptyView()
+        }
+        
     }
     
     private var statusSection: some View {
@@ -290,7 +481,7 @@ struct AddTask: View {
                 }
             }
         }
-    
+        
     }
     
     private func handleCopyTap() {
@@ -314,13 +505,47 @@ struct AddTask: View {
             modelContext.insert(workingTask)
         }
         
+        workingTask.reminderUnitRaw = selectedUnit.rawValue
+        workingTask.reminderAmount = selectedValue
+        
         do {
             try modelContext.save()
+            
+            // Capture task properties BEFORE entering Task closure to avoid SwiftData concurrency issues
+            let taskId = workingTask.id
+            let hasReminder = workingTask.reminder
+            let taskDueDate = workingTask.dueDate
+            let taskTitle = workingTask.title
+            let taskReminderUnit = workingTask.reminderUnitRaw
+            let taskReminderAmount = workingTask.reminderAmount
+            
+            // Schedule or cancel reminder based on current settings
+            Task {
+                if hasReminder, let date = taskDueDate {
+                    // Verify authorization before scheduling
+                    let status = await notificationManager.checkAuthorizationStatus()
+                    if status == .authorized || status == .provisional {
+                        print("Schedule: \(taskTitle)")
+                        try await notificationManager.scheduleReminderBeforeDueDate(
+                            id: "task_\(taskId)",
+                            title: "Task Due",
+                            body: taskTitle,
+                            dueDate: date,
+                            reminderUnitRaw: taskReminderUnit,
+                            reminderAmount: taskReminderAmount
+                        )
+                    } else {
+                        print("⚠️ Cannot schedule notification: Not authorized")
+                    }
+                } else {
+                    notificationManager.cancelNotification(id: "task_\(taskId)")
+                }
+            }
             dismiss()
         } catch {
             // Replace with your UI error handling if desired
             print("Failed to save model context: \(error)")
         }
     }
+    
 }
-

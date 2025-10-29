@@ -88,8 +88,29 @@ struct TaskListOptionsPopover: View {
                         .opacity(showCompleted ? 1 : 0)
                     Text("Show Completed")
                 }
+                .foregroundStyle(.black)
             }
+            
             Divider()
+            
+            Button(action: {
+                isPopoverPresented = false
+                path.append(ClientsRoute())
+                
+            }) {
+                HStack {
+                    Image(systemName: "checkmark")
+                        .opacity(0)
+                    Text("Clients")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.black)
+                        
+                }
+                .foregroundStyle(.black)
+            }
+            
             Button(action: {
                 isPopoverPresented = false
                 path.append(SettingstRoute())
@@ -102,9 +123,10 @@ struct TaskListOptionsPopover: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.black)
                         
                 }
+                .foregroundStyle(.black)
             }
         }
         .padding()

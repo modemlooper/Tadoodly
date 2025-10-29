@@ -20,6 +20,9 @@ final class Project {
     // To-many must be optional for CloudKit. Declare relationship; inverse is declared on UserTask.project.
     @Relationship(deleteRule: .cascade)
     var tasks: [UserTask]?
+    
+    @Relationship(inverse: \Client.projects)
+    var client: Client?
 
     init() {}
 }

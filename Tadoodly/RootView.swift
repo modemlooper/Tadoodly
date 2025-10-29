@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import TipKit
 
 // Navigation Routes
 struct AddTaskRoute: Hashable {
@@ -23,22 +22,26 @@ struct SettingstRoute: Hashable {}
 struct TimeRoute: Hashable {
     let task: UserTask?
 }
-
+struct ExportRoute: Hashable {}
+struct ClientsRoute: Hashable {}
 
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
-
+    
+    @State private var notificationManager = NotificationManager.shared
+    
     @State private var pathTasks = NavigationPath()
     @State private var pathProjects = NavigationPath()
     @State private var pathStats = NavigationPath()
     @State private var pathSchedule = NavigationPath()
     
     @State private var selectedSortOption: TaskListSortOption = .updateAt
-
+    @State private var selectedTab = 0
+    
     var body: some View {
         // Build the TabView first so we can conditionally apply modifiers
-        let tabHost = TabView {
-
+        let tabHost = TabView(selection: $selectedTab) {
+            
             NavigationStack(path: $pathTasks) {
                 TaskList(path: $pathTasks, selectedSortOption: $selectedSortOption)
                     .navigationDestination(for: UserTask.self) { task in
@@ -59,6 +62,12 @@ struct RootView: View {
                     .navigationDestination(for: SettingstRoute.self) { _ in
                         SettingsView(path: $pathTasks)
                     }
+                    .navigationDestination(for: ExportRoute.self) { _ in
+                        ExportView()
+                    }
+                    .navigationDestination(for: ClientsRoute.self) { _ in
+                        ClientList()
+                    }
                     .navigationDestination(for: TimeRoute.self) { route in
                         Group {
                             if let task = route.task {
@@ -72,6 +81,7 @@ struct RootView: View {
             .tabItem {
                 Label("Tasks", systemImage: "checklist")
             }
+            .tag(0)
             
             NavigationStack(path: $pathProjects) {
                 ProjectList(path: $pathProjects)
@@ -110,6 +120,7 @@ struct RootView: View {
             .tabItem {
                 Label("Projects", systemImage: "folder")
             }
+            .tag(1)
             
             NavigationStack() {
                 StatsView()
@@ -118,6 +129,7 @@ struct RootView: View {
             .tabItem {
                 Label("Stats", systemImage: "chart.bar.xaxis")
             }
+            .tag(2)
             
             NavigationStack(path: $pathSchedule) {
                 ScheduleView(path: $pathSchedule)
@@ -132,7 +144,58 @@ struct RootView: View {
             .tabItem {
                 Label("Schedule", systemImage: "calendar")
             }
+            .tag(3)
             
+        }
+        .alert("Reminder Notifications?", isPresented: $notificationManager.shouldShowPermissionPrompt) {
+             Button("Enable") {
+                 Task {
+                     do {
+                         try await notificationManager.requestAuthorization()
+                     } catch {
+                         // Optionally log or present an error; for now, just print
+                         print("Failed to request notification authorization: \(error)")
+                     }
+                 }
+             }
+             Button("Not Now", role: .cancel) { }
+         } message: {
+             Text("Get reminders for your scheduled tasks so you never miss a deadline.")
+         }
+        .task {
+            // Set the model context for notification handling
+            notificationManager.modelContext = modelContext
+            
+            // Set up navigation callback for notification taps
+            notificationManager.onTaskNotificationTapped = { taskId in
+                Task {
+                    await MainActor.run {
+                        // Fetch the task
+                        let descriptor = FetchDescriptor<UserTask>(
+                            predicate: #Predicate { task in
+                                task.id == taskId
+                            }
+                        )
+                        
+                        if let tasks = try? modelContext.fetch(descriptor),
+                           let task = tasks.first {
+                            // Switch to Tasks tab
+                            selectedTab = 0
+                            
+                            // Clear the navigation path and navigate to the task
+                            pathTasks = NavigationPath()
+                            
+                            // Navigate to the task detail
+                            pathTasks.append(AddTaskRoute(task: task))
+                        }
+                    }
+                    
+                    // Small delay to ensure navigation completes
+                    try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                }
+            }
+            
+            await notificationManager.checkIfShouldPromptForPermission()
         }
         
         if #available(iOS 26.0, *) {
@@ -146,104 +209,8 @@ struct RootView: View {
     }
 }
 
-#Preview("RootView with in-memory data") {
-    // A helper view to encapsulate setup so the preview macro returns a single View
-    struct RootPreviewContainer: View {
-        let container: ModelContainer
-        init() {
-            let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-            container = try! ModelContainer(
-                for: UserTask.self, Project.self, TaskItem.self, TimeEntry.self,
-                configurations: configuration
-            )
-            let context = container.mainContext
-
-            // Insert sample projects
-            let sampleProjects = ["Home", "Work", "Health"]
-            var projectsByName: [String: Project] = [:]
-            for name in sampleProjects {
-                let proj = Project()
-                proj.name = name
-                context.insert(proj)
-                projectsByName[name] = proj
-            }
-
-            // Insert sample tasks
-            let sampleTasks = ["Buy groceries", "Prepare presentation", "Book dentist appointment"]
-            var createdTasks: [UserTask] = []
-            for (index, title) in sampleTasks.enumerated() {
-                let task = UserTask()
-                task.title = title
-                task.createdAt = Date()
-                task.updatedAt = Date()
-                task.priority = .low
-                task.status = .inProgress
-                if index == 0, let home = projectsByName["Home"] {
-                    task.project = home
-                } else if index == 1, let work = projectsByName["Work"] {
-                    task.project = work
-                }
-                context.insert(task)
-                createdTasks.append(task)
-            }
-
-            // Insert sample time entries
-            if let firstTask = createdTasks.first {
-                let entry1 = TimeEntry()
-                entry1.task = firstTask
-                let entry1StartTime = Calendar.current.date(byAdding: .minute, value: -45, to: Date()) ?? Date().addingTimeInterval(-45 * 60)
-                entry1.startTime = entry1StartTime
-                entry1.endTime = Date()
-                entry1.date = entry1StartTime
-                entry1.duration = 45 * 60
-                context.insert(entry1)
-            }
-
-            if createdTasks.count > 1 {
-                let secondTask = createdTasks[1]
-                
-                // Entry from yesterday
-                let entry2 = TimeEntry()
-                entry2.task = secondTask
-                let cal = Calendar.current
-                let yesterday = cal.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-                let yesterdayStart = cal.date(byAdding: .hour, value: 10, to: cal.startOfDay(for: yesterday)) ?? yesterday
-                let yesterdayEnd = cal.date(byAdding: .hour, value: 2, to: yesterdayStart) ?? yesterdayStart
-                entry2.startTime = yesterdayStart
-                entry2.endTime = yesterdayEnd
-                entry2.date = yesterdayStart
-                entry2.duration = 2 * 3600 // 2 hours
-                context.insert(entry2)
-                
-                // Entry from last month
-                let entry3 = TimeEntry()
-                entry3.task = secondTask
-                let lastMonth = cal.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-                let lastMonthStart = cal.date(byAdding: .hour, value: 14, to: cal.startOfDay(for: lastMonth)) ?? lastMonth
-                let lastMonthEnd = cal.date(byAdding: .minute, value: 90, to: lastMonthStart) ?? lastMonthStart
-                entry3.startTime = lastMonthStart
-                entry3.endTime = lastMonthEnd
-                entry3.date = lastMonthStart
-                entry3.duration = 90 * 60 // 1.5 hours
-                context.insert(entry3)
-            }
-        }
-
-        var body: some View {
-         
-            RootView()
-                .modelContainer(container)
-        }
-    }
-
-    return RootPreviewContainer()
-        .task {
-            try? Tips.resetDatastore()
-            try? Tips.configure([
-                .displayFrequency(.immediate),
-                .datastoreLocation(.applicationDefault)
-            ])
-            
-        }
+#Preview() {
+    RootView()
+        .modelContainer(PreviewModels.container)
 }
 

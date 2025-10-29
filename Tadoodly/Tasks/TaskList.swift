@@ -7,7 +7,7 @@ struct TaskList: View {
     @Environment(\.modelContext) private var modelContext
     
     @Query private var tasks: [UserTask]
-
+    
     @Binding var path: NavigationPath
     @Binding var selectedSortOption: TaskListSortOption
     
@@ -25,8 +25,6 @@ struct TaskList: View {
     @AppStorage("showCompleted") private var showCompletedSetting: Bool = false
     @AppStorage("showAssistAgreement") private var showAssistAgreementAcknowledged: Bool = false
     @AppStorage("isAssistEnabled") private var isAssistEnabled: Bool = true
-    
-    let tip = AddTaskTip()
     
     // Computed property to sort tasks based on selected option
     private var sortedTasks: [UserTask] {
@@ -71,6 +69,25 @@ struct TaskList: View {
     
     var body: some View {
         ScrollViewReader { proxy in
+            Button("Test Notification in 5s") {
+                Task {
+                    do {
+                        try await NotificationManager.shared.scheduleTestNotification(delaySeconds: 20)
+                        print("✅ Test notification scheduled")
+                    } catch {
+                        print("❌ Failed to schedule: \(error)")
+                    }
+                }
+            }
+            .padding(10)
+            
+            Button("Debug Pending") {
+                Task {
+                    await NotificationManager.shared.debugPendingNotifications()
+                }
+            }
+            .padding(10)
+            
             Group {
                 if tasks.isEmpty {
                     GeometryReader { proxy in
@@ -110,6 +127,7 @@ struct TaskList: View {
                                 .listRowInsets(EdgeInsets())
                             }
                         }
+                        
                     }
                 }
             }
@@ -128,10 +146,10 @@ struct TaskList: View {
                 Button("I Disagree", role: .cancel) {}
                 
             }, message: {
-                Text("Project Assist uses on device Apple Intelligence. AI is an emerging technology. Responses may be incorrect. Please use your best judgement or consult a professional on the topic.")
+                Text("Project Assist uses Apple Intelligence, which runs privately on your device. AI is an emerging technology and may produce inaccurate results. Always use your best judgment and consult qualified professionals for important decisions.")
             })
             .toolbar {
-            #if canImport(FoundationModels)
+#if canImport(FoundationModels)
                 
                 if ( isAssistEnabled ) {
                     ToolbarItem(placement: .automatic) {
@@ -177,10 +195,10 @@ struct TaskList: View {
                     }
                     
                 }
-               
+                
                 ToolbarSpacer()
                 
-            #endif
+#endif
                 
                 ToolbarItem {
                     Button {
@@ -200,19 +218,16 @@ struct TaskList: View {
                 
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(value: AddTaskRoute(task: nil)) {
-                        Label("Add Task", systemImage: "plus")
-                            .popoverTip(tip)
-                           
+                        VStack {
+                            Label("Add Task", systemImage: "plus")
+                        }
                     }
-                    
-                    if tasks.isEmpty {
-                        TipView(tip, arrowEdge: .bottom)
-                    }
-                   
                 }
-               
+                
+                
             }
-          
+            
+            
         }
     }
 }
@@ -241,7 +256,13 @@ struct TaskRow: View {
             VStack(alignment: .leading, spacing: 15) {
                 
                 HStack(alignment: .top) {
-                    StatusChip(task: task)
+                    
+                    Text(task.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                    
                     Spacer()
                     if task.isActive {
                         Image(systemName: "play.circle.fill")
@@ -249,35 +270,20 @@ struct TaskRow: View {
                     }
                 }
                 
-                Text(task.title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-                
                 HStack(spacing: 14) {
+                    
+                    Text(task.status?.rawValue ?? "")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    //                    StatusChip(task: task)
+                    
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle")
                         Text("\(completedCount)/\(totalCount)")
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "flag")
-                        Text(task.priority?.rawValue ?? "")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    
-                    if let dueDate = task.dueDate {
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                            Text("Due \(dueDate, format: .dateTime.month(.abbreviated).day())")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
                     
                     if let project = task.project {
                         HStack(spacing: 4) {
@@ -292,9 +298,25 @@ struct TaskRow: View {
                         }
                     }
                     
+                    //                    HStack(spacing: 4) {
+                    //                        Image(systemName: "flag")
+                    //                        Text(task.priority?.rawValue ?? "")
+                    //                    }
+                    //                    .font(.subheadline)
+                    //                    .foregroundStyle(.secondary)
+                    
+                    //                    if let dueDate = task.dueDate {
+                    //                        HStack(spacing: 4) {
+                    //                            Image(systemName: "calendar")
+                    //                            Text("Due \(dueDate, format: .dateTime.month(.abbreviated).day())")
+                    //                        }
+                    //                        .font(.subheadline)
+                    //                        .foregroundStyle(.secondary)
+                    //                    }
+                    
                     Spacer()
                 }
-        
+                
                 Divider()
             }
             .padding(.horizontal)
@@ -303,3 +325,4 @@ struct TaskRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+

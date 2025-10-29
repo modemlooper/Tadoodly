@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct ScheduleView: View {
+
     @Binding var path: NavigationPath
     @State private var selectedDate: Date? = .now
     @State private var currentMonth: Date = .now
@@ -98,10 +99,10 @@ struct ScheduleView: View {
                     }
                 }
             }
-            
-            
         }
     }
+    
+   
 }
 
 struct CustomCalendarView: View {

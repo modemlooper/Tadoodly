@@ -41,6 +41,20 @@ struct SettingsView: View {
                 }
             }
             
+            Button(action: {
+                path.append(ExportRoute())
+                
+            }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Export")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(.black)
+            }
+        
             Section {
                 Button("Delete App Data", role: .destructive) {
                     showDeleteAlert = true

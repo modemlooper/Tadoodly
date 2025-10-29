@@ -8,13 +8,18 @@ final class UserTask {
     var isActive: Bool = false
     var completed: Bool = false
     var isCompleted: Bool = false
+    var reminder: Bool = false
+    // Persisted reminder configuration
+    // Stored as rawValue for unit and integer amount for value
+    var reminderUnitRaw: String = "Minutes"
+    var reminderAmount: Int = 15
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
     var taskDescription: String?
-    var priority: TaskPriority?
+    var priorityRaw: String?
     var completedAt: Date?
     var dueDate: Date?
-    var status: TaskStatus?
+    var statusRaw: String?
     var updateAt: Date?
     var color: String?
     
@@ -30,6 +35,36 @@ final class UserTask {
     var timeEntries: [TimeEntry]?
     
     init() {}
+}
+
+enum ReminderUnit: String, CaseIterable {
+    case minutes = "Minutes"
+    case hours = "Hours"
+    case days = "Days"
+    case weeks = "Weeks"
+}
+
+extension UserTask {
+    var reminderUnit: ReminderUnit {
+        get { ReminderUnit(rawValue: reminderUnitRaw) ?? .minutes }
+        set { reminderUnitRaw = newValue.rawValue }
+    }
+    
+    var priority: TaskPriority? {
+        get {
+            guard let priorityRaw else { return nil }
+            return TaskPriority(rawValue: priorityRaw)
+        }
+        set { priorityRaw = newValue?.rawValue }
+    }
+    
+    var status: TaskStatus? {
+        get {
+            guard let statusRaw else { return nil }
+            return TaskStatus(rawValue: statusRaw)
+        }
+        set { statusRaw = newValue?.rawValue }
+    }
 }
 
 enum TaskStatus: String, Codable, CaseIterable, Identifiable {

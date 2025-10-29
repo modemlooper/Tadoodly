@@ -6,13 +6,29 @@
 //
 
 import SwiftUI
+import SwiftData
 
-struct ClientsView: View {
+struct ClientList: View {
+    
+    @Environment(\.modelContext) private var modelContext
+    
+    @Query(sort: [SortDescriptor(\Client.name, order: .forward)]) private var clients: [Client]
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        
+        List(clients) { client in
+            VStack(alignment: .leading) {
+                Text(client.name)
+                    .font(.headline)
+                Text(client.email)
+                    .font(.subheadline)
+            }
+            
+        }
     }
 }
 
 #Preview {
-    ClientsView()
+    ClientList()
+        .modelContainer(PreviewModels.container)
 }
