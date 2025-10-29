@@ -9,6 +9,13 @@ import Foundation
 import UserNotifications
 import SwiftData
 
+enum ReminderUnit: String, CaseIterable {
+    case minutes = "Minutes"
+    case hours = "Hours"
+    case days = "Days"
+    case weeks = "Weeks"
+}
+
 enum ReminderTimeUnit {
     case minutes(Int)
     case hours(Int)
@@ -180,7 +187,7 @@ extension NotificationManager {
         
         // Create date components for the trigger
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         

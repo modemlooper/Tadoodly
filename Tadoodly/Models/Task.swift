@@ -37,13 +37,6 @@ final class UserTask {
     init() {}
 }
 
-enum ReminderUnit: String, CaseIterable {
-    case minutes = "Minutes"
-    case hours = "Hours"
-    case days = "Days"
-    case weeks = "Weeks"
-}
-
 extension UserTask {
     var reminderUnit: ReminderUnit {
         get { ReminderUnit(rawValue: reminderUnitRaw) ?? .minutes }

@@ -92,24 +92,24 @@ struct TaskListOptionsPopover: View {
             }
             
             Divider()
-            
-            Button(action: {
-                isPopoverPresented = false
-                path.append(ClientsRoute())
-                
-            }) {
-                HStack {
-                    Image(systemName: "checkmark")
-                        .opacity(0)
-                    Text("Clients")
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.black)
-                        
-                }
-                .foregroundStyle(.black)
-            }
+            // MARK: - Clients
+//            Button(action: {
+//                isPopoverPresented = false
+//                path.append(ClientsRoute())
+//                
+//            }) {
+//                HStack {
+//                    Image(systemName: "checkmark")
+//                        .opacity(0)
+//                    Text("Clients")
+//                    Spacer()
+//                    Image(systemName: "chevron.right")
+//                        .font(.system(size: 11, weight: .bold))
+//                        .foregroundColor(.black)
+//                        
+//                }
+//                .foregroundStyle(.black)
+//            }
             
             Button(action: {
                 isPopoverPresented = false
