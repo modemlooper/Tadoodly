@@ -69,24 +69,24 @@ struct TaskList: View {
     
     var body: some View {
         ScrollViewReader { proxy in
-            Button("Test Notification in 5s") {
-                Task {
-                    do {
-                        try await NotificationManager.shared.scheduleTestNotification(delaySeconds: 20)
-                        print("✅ Test notification scheduled")
-                    } catch {
-                        print("❌ Failed to schedule: \(error)")
-                    }
-                }
-            }
-            .padding(10)
-            
-            Button("Debug Pending") {
-                Task {
-                    await NotificationManager.shared.debugPendingNotifications()
-                }
-            }
-            .padding(10)
+//            Button("Test Notification in 5s") {
+//                Task {
+//                    do {
+//                        try await NotificationManager.shared.scheduleTestNotification(delaySeconds: 20)
+//                        print("✅ Test notification scheduled")
+//                    } catch {
+//                        print("❌ Failed to schedule: \(error)")
+//                    }
+//                }
+//            }
+//            .padding(10)
+//            
+//            Button("Debug Pending") {
+//                Task {
+//                    await NotificationManager.shared.debugPendingNotifications()
+//                }
+//            }
+//            .padding(10)
             
             Group {
                 if tasks.isEmpty {
@@ -223,9 +223,11 @@ struct TaskList: View {
                         }
                     }
                 }
+                //.sharedBackgroundVisibility(.hidden)
                 
                 
             }
+          
             
             
         }
@@ -250,10 +252,10 @@ struct TaskRow: View {
                 Rectangle()
                     .fill(.gray)
                     .frame(width: 8)
-                    .padding(.trailing, 6)
+                    .padding(.vertical, 0)
             }
             
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 8) {
                 
                 HStack(alignment: .top) {
                     
@@ -316,6 +318,7 @@ struct TaskRow: View {
                     
                     Spacer()
                 }
+                .padding(.bottom, 10)
                 
                 Divider()
             }

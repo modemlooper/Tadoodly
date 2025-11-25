@@ -65,24 +65,26 @@ struct ScheduleView: View {
                     }
                 }
                 
-                ForEach(filteredTasks, id: \.id) { task in
-                    
-                    NavigationLink(value: task) {
-                        TaskRow(task: task)
-                            .contentShape(Rectangle())
-                        // Recognize double-tap with higher priority than the link's single tap
-                            .highPriorityGesture(
-                                TapGesture(count: 2).onEnded {
-                                    // Navigate to edit on double-tap
-                                    //path.append(task)
-                                    path.append(AddTaskRoute(task: task))
-                                }
-                            )
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(filteredTasks, id: \.id) { task in
+                        
+                        NavigationLink(value: task) {
+                            TaskRow(task: task)
+                                .contentShape(Rectangle())
+                            // Recognize double-tap with higher priority than the link's single tap
+                                .highPriorityGesture(
+                                    TapGesture(count: 2).onEnded {
+                                        // Navigate to edit on double-tap
+                                        //path.append(task)
+                                        path.append(AddTaskRoute(task: task))
+                                    }
+                                )
+                        }
+                        .navigationLinkIndicatorVisibility(.hidden)
+                        .tint(.primary)
+                        .buttonStyle(.plain)
+                        
                     }
-                    .navigationLinkIndicatorVisibility(.hidden)
-                    .tint(.primary)
-                    .buttonStyle(.plain)
-                
                 }
                 
            

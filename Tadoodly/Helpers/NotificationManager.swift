@@ -55,6 +55,7 @@ enum NotificationError: Error {
     case dateInPast
 }
 
+// MARK: - NotificationManager
 @Observable
 class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
@@ -68,14 +69,23 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         UNUserNotificationCenter.current().delegate = self
     }
     
+    /* 
+    * This function requests authorization for notifications
+    */
     func requestAuthorization() async throws {
         try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
     }
     
+    /* 
+    * This function checks the authorization status of notifications
+    */
     func checkAuthorizationStatus() async -> UNAuthorizationStatus {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
     
+    /* 
+    * This function checks if the app should prompt for permission
+    */
     func checkIfShouldPromptForPermission() async {
         let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
         
@@ -87,6 +97,9 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
     
+    /* 
+    * This function checks if a notification with a specific identifier exists
+    */
     private func hasPendingNotification(withId id: String) async -> Bool {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
@@ -96,6 +109,9 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
     
+    /* 
+    * This function schedules a test notification
+    */
     func scheduleTestNotification(delaySeconds: Int = 5) async throws {
         let testDate = Date().addingTimeInterval(TimeInterval(delaySeconds))
         try await scheduleNotification(
@@ -106,7 +122,10 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             replaceExisting: true
         )
     }
-    
+        
+    /* 
+    * This function debugs the pending notifications
+    */
     func debugPendingNotifications() async {
         let requests = await getShceduledNotifications()
         print("📱 Pending Notifications: \(requests.count)")
@@ -121,7 +140,9 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         }
     }
     
-    // MARK: - UNUserNotificationCenterDelegate Handles notification taps
+    /* 
+    * This function handles notification taps
+    */
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -146,6 +167,9 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         completionHandler()
     }
     
+    /* 
+    * This function handles notification presentation
+    */
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -161,8 +185,14 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
-
+// MARK: - NotificationManager Functions
 extension NotificationManager {
+
+    /* 
+    * This function schedules a notification
+    * It will replace existing notifications with the same identifier
+    * If replaceExisting is false, it will not replace existing notifications
+    */
     func scheduleNotification(
         id: String,
         title: String,
@@ -170,12 +200,10 @@ extension NotificationManager {
         date: Date,
         replaceExisting: Bool = true
     ) async throws {
-        // Check for existing pending request with same id
-        if await hasPendingNotification(withId: id) {
-            if replaceExisting {
-                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
-            } else {
-                // Skip scheduling to avoid duplicate
+        // UNUserNotificationCenter automatically replaces notifications with the same identifier
+        // so we don't need to manually check and remove them unless we explicitly want to avoid replacement
+        if !replaceExisting {
+            if await hasPendingNotification(withId: id) {
                 return
             }
         }
@@ -208,6 +236,9 @@ extension NotificationManager {
         }
     }
     
+    /* 
+    * This function returns the current notification settings
+    */
     func getNotificationSettings() async -> UNNotificationSettings {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getNotificationSettings { settings in
@@ -216,6 +247,9 @@ extension NotificationManager {
         }
     }
     
+    /* 
+    * This function returns the current scheduled notifications
+    */
     func getShceduledNotifications() async -> [UNNotificationRequest] {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
@@ -224,35 +258,41 @@ extension NotificationManager {
         }
     }
     
+    /* 
+    * This function cancels a notification
+    */
     func cancelNotification(id: String) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
     }
     
+    /* 
+    * This function cancels all notifications
+    */
     func cancelAllNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
     
+    /* 
+    * This function schedules a reminder before a due date
+    */
     func scheduleReminderBeforeDueDate(
         id: String,
         title: String,
         body: String,
         dueDate: Date,
-        reminderUnitRaw: String,
+        reminderUnit: ReminderUnit,
         reminderAmount: Int,
         replaceExisting: Bool = true
     ) async throws {
-        // Map raw unit string to Calendar.Component and negative offset
-        let unit = reminderUnitRaw
-        let amount = reminderAmount
+        // Map unit to Calendar.Component
         let component: Calendar.Component
-        switch unit {
-        case "Minutes": component = .minute
-        case "Hours": component = .hour
-        case "Days": component = .day
-        case "Weeks": component = .weekOfYear
-        default: component = .minute
+        switch reminderUnit {
+        case .minutes: component = .minute
+        case .hours: component = .hour
+        case .days: component = .day
+        case .weeks: component = .weekOfYear
         }
-        let offset = -abs(amount)
+        let offset = -abs(reminderAmount)
         
         guard let notificationDate = Calendar.current.date(
             byAdding: component,
@@ -262,7 +302,9 @@ extension NotificationManager {
             throw NotificationError.invalidDate
         }
         
-        // Don't schedule if the notification date is in the past
+        /* 
+        * Don't schedule if the notification date is in the past
+        */
         guard notificationDate > Date() else {
             throw NotificationError.dateInPast
         }
@@ -276,6 +318,9 @@ extension NotificationManager {
         )
     }
     
+    /* 
+    * This function schedules a repeating notification
+    */
     func scheduleRepeatingNotification(
         id: String,
         title: String,
@@ -284,11 +329,9 @@ extension NotificationManager {
         minute: Int,
         replaceExisting: Bool = true
     ) async throws {
-        // Check for existing pending request with same id
-        if await hasPendingNotification(withId: id) {
-            if replaceExisting {
-                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
-            } else {
+        // UNUserNotificationCenter automatically replaces notifications with the same identifier
+        if !replaceExisting {
+            if await hasPendingNotification(withId: id) {
                 return
             }
         }

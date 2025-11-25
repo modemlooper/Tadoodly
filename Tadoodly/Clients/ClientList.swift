@@ -28,7 +28,3 @@ struct ClientList: View {
     }
 }
 
-#Preview {
-    ClientList()
-        .modelContainer(PreviewModels.container)
-}

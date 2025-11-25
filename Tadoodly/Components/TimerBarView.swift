@@ -72,7 +72,7 @@ struct ExpandedTimerView: View {
                 
                 TimeCounterView(task: task, fontSize: 14)
             }
-            .frame(height: .infinity)
+            .frame(maxHeight: .infinity, alignment: .top)
             
             Spacer()
             

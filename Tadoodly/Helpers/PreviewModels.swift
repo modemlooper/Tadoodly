@@ -32,7 +32,7 @@ enum PreviewModels {
             task.updatedAt = Date()
             task.priority = .low
             task.status = .inProgress
-            if index == 0, let home = projectsByName["Home"] {
+            if index == 0, let home = projectsByName["Work"] {
                 task.project = home
             } else if index == 1, let work = projectsByName["Work"] {
                 task.project = work

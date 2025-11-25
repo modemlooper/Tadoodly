@@ -77,24 +77,26 @@ struct ProjectDetail: View {
                     
                 }
             }
-            .padding()
+            .padding(12)
             
             Divider()
             
             if let tasks = project.tasks, !tasks.isEmpty {
-                ForEach(tasks) { task in
-                    TaskRow(task: task)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            // Double-tap: go to edit
-                            path.append(AddTaskRoute(task: task))
-                        }
-                        .onTapGesture {
-                            // Single-tap: go to detail
-                            path.append(task)
-                        }
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(tasks) { task in
+                        TaskRow(task: task)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets())
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                // Double-tap: go to edit
+                                path.append(AddTaskRoute(task: task))
+                            }
+                            .onTapGesture {
+                                // Single-tap: go to detail
+                                path.append(task)
+                            }
+                    }
                 }
             } else {
                 ContentUnavailableView(

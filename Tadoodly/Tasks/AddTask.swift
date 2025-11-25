@@ -9,6 +9,9 @@ import SwiftUI
 import SwiftData
 import UserNotifications
 
+/* 
+ * This struct is the main view for adding a new task
+ */
 struct AddTask: View {
     
     @Environment(\.modelContext) private var modelContext
@@ -290,8 +293,8 @@ struct AddTask: View {
                                                 id: "task_\(workingTask.id)",
                                                 title: "Task Due in \(workingTask.reminderAmount) \(workingTask.reminderUnitRaw)",
                                                 body: workingTask.title,
-                                                dueDate: workingTask.dueDate,
-                                                reminderUnitRaw: workingTask.reminderUnitRaw,
+                                                dueDate: workingTask.dueDate ?? Date(),
+                                                reminderUnit: ReminderUnit(rawValue: workingTask.reminderUnitRaw) ?? .minutes,
                                                 reminderAmount: workingTask.reminderAmount
                                             )
                                         }
@@ -532,7 +535,7 @@ struct AddTask: View {
                             title: "Task Due in \(taskReminderAmount) \(taskReminderUnit)",
                             body: taskTitle,
                             dueDate: date,
-                            reminderUnitRaw: taskReminderUnit,
+                            reminderUnit: ReminderUnit(rawValue: taskReminderUnit) ?? .minutes,
                             reminderAmount: taskReminderAmount
                         )
                     } else {

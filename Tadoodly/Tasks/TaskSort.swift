@@ -46,17 +46,16 @@ struct TaskListOptionsPopover: View {
                                     if selectedSortOption == option {
                                         Image(systemName: "checkmark")
                                             .font(.subheadline)
-                                            .foregroundColor(.accentColor)
                                     } else {
                                         Image(systemName: "checkmark")
                                             .opacity(0)
                                     }
                                     Text(option.rawValue)
                                         .font(.subheadline)
-                                        .foregroundColor(.primary)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .buttonStyle(.plain)
                         }
                         .padding(.vertical, 8)
                     }
@@ -88,8 +87,8 @@ struct TaskListOptionsPopover: View {
                         .opacity(showCompleted ? 1 : 0)
                     Text("Show Completed")
                 }
-                .foregroundStyle(.black)
             }
+            .buttonStyle(.plain)
             
             Divider()
             // MARK: - Clients
@@ -123,11 +122,9 @@ struct TaskListOptionsPopover: View {
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.black)
-                        
                 }
-                .foregroundStyle(.black)
             }
+            .buttonStyle(.plain)
         }
         .padding()
         .presentationCompactAdaptation(.none)

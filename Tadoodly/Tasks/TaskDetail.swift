@@ -36,9 +36,17 @@ struct TaskDetail: View {
                     
                     VStack(alignment:.leading, spacing: 0) {
                         
+                        if let status = task?.status {
+                            Text(status.rawValue)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding(.bottom, 14)
+                            
+                        }
+                        
                         //Status badge
-                        StatusChip(task: task!)
-                            .padding(.bottom, 16)
+//                        StatusChip(task: task!)
+//                            .padding(.bottom, 16)
                         
                         // Title
                         if let title = task?.title, !title.isEmpty {
@@ -97,7 +105,7 @@ struct TaskDetail: View {
                     if let project = task?.project {
                         HStack(spacing: 4) {
                             Image(systemName: "folder")
-                            Text(project.name.count > 10 ? String(project.name.prefix(10)) + "…" : project.name)
+                            Text(project.name)
                         }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -105,7 +113,7 @@ struct TaskDetail: View {
                     
                 }
             }
-            .padding()
+            .padding(12)
             
             Divider()
             

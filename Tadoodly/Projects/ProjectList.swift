@@ -92,24 +92,23 @@ struct ProjectRow: View {
                         .foregroundColor(colorFromString(project.color))
                 }
                 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         Text(project.name)
                             .font(.headline)
                             .fontWeight(.bold)
                     }
-                    HStack(spacing: 18) {
+                    HStack(spacing: 14) {
                         
                         HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle")
-                            Text("\(completedCount)/\(totalCount)")
+                            Text("\(project.status)")
                         }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         
                         HStack(spacing: 4) {
-                            Image(systemName: "clock")
-                            Text("\(project.status)")
+                            Image(systemName: "checkmark.circle")
+                            Text("\(completedCount)/\(totalCount)")
                         }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -125,6 +124,7 @@ struct ProjectRow: View {
                         
                         
                     }
+                    .padding(.bottom, 10)
                     
                     Divider()
                 }
