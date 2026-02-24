@@ -22,6 +22,11 @@ struct TaskList: View {
     @State private var showAssistAgreementAlert: Bool = false
     @State private var showCompleted: Bool = false
     
+    private var currentDaySymbolName: String {
+        let day = Calendar.autoupdatingCurrent.component(.day, from: Date())
+        return "\(day).calendar"
+    }
+    
     @AppStorage("showCompleted") private var showCompletedSetting: Bool = false
     @AppStorage("showAssistAgreement") private var showAssistAgreementAcknowledged: Bool = false
     @AppStorage("isAssistEnabled") private var isAssistEnabled: Bool = true
@@ -67,27 +72,13 @@ struct TaskList: View {
         }
     }
     
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
     var body: some View {
         ScrollViewReader { proxy in
-//            Button("Test Notification in 5s") {
-//                Task {
-//                    do {
-//                        try await NotificationManager.shared.scheduleTestNotification(delaySeconds: 20)
-//                        print("✅ Test notification scheduled")
-//                    } catch {
-//                        print("❌ Failed to schedule: \(error)")
-//                    }
-//                }
-//            }
-//            .padding(10)
-//            
-//            Button("Debug Pending") {
-//                Task {
-//                    await NotificationManager.shared.debugPendingNotifications()
-//                }
-//            }
-//            .padding(10)
-            
             Group {
                 if tasks.isEmpty {
                     GeometryReader { proxy in
@@ -107,6 +98,134 @@ struct TaskList: View {
                     }
                 } else {
                     ScrollView {
+                        
+                        LazyVGrid(columns: columns, spacing: 10) {
+                            
+                            NavigationLink(value: TaskListType.Kind.today) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.blue.opacity(0.8))
+                                        .frame(minHeight: 80)
+                                    
+                                    VStack {
+                                        HStack {
+                                            Image(systemName: currentDaySymbolName)
+                                                .foregroundColor(.white)
+                                                .font(.title)
+                                            
+                                            Spacer()
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        HStack {
+                                            Text("Today")
+                                                .foregroundColor(.white)
+                                                .font(.title3.bold())
+                                            
+                                            Spacer()
+                                        }
+                                    }
+                                    .padding(10)
+                                }
+                            }
+                            
+                            NavigationLink(value: TaskListType.Kind.scheduled) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.orange.opacity(0.8))
+                                        .frame(minHeight: 80)
+                                    
+                                    VStack {
+                                        HStack {
+                                            
+                                            Image(systemName: "calendar")
+                                                .foregroundColor(.white)
+                                                .font(.title)
+                                            
+                                            Spacer()
+                                            
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        HStack {
+                                            Text("Scheduled")
+                                                .foregroundColor(.white)
+                                                .font(.title3.bold())
+                                            
+                                            Spacer()
+                                        }
+                                    }
+                                    .padding(10)
+                                }
+                            }
+                            
+                            NavigationLink(value: TaskListType.Kind.all) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.gray.opacity(0.8))
+                                        .frame(minHeight: 80)
+                                    
+                                    VStack {
+                                        HStack {
+                                            
+                                            Image(systemName: "tray")
+                                                .foregroundColor(.white)
+                                                .font(.title)
+                                            
+                                            Spacer()
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        HStack {
+                                            Text("All")
+                                                .foregroundColor(.white)
+                                                .font(.title3.bold())
+                                            
+                                            Spacer()
+                                        }
+                                        
+                                    }
+                                    .padding(10)
+                                }
+                            }
+                            
+                            NavigationLink(value: TaskListType.Kind.completed) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.green.opacity(0.8))
+                                        .frame(minHeight: 80)
+                                    
+                                    VStack {
+                                        HStack {
+                                            
+                                            Image(systemName: "archivebox")
+                                                .foregroundColor(.white)
+                                                .font(.title)
+                                            
+                                            Spacer()
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        HStack {
+                                            Text("Completed")
+                                                .foregroundColor(.white)
+                                                .font(.title3.bold())
+                                            
+                                            Spacer()
+                                        }
+                                        
+                                    }
+                                    .padding(10)
+                                }
+                            }
+                            
+                        }
+                        .padding()
+                        
                         VStack(alignment: .leading, spacing: 3) {
                             ForEach(sortedTasks, id: \.id) { task in
                                 NavigationLink(value: task) {
@@ -223,11 +342,9 @@ struct TaskList: View {
                         }
                     }
                 }
-                //.sharedBackgroundVisibility(.hidden)
-                
-                
+           
             }
-          
+            
             
             
         }
@@ -300,22 +417,6 @@ struct TaskRow: View {
                         }
                     }
                     
-                    //                    HStack(spacing: 4) {
-                    //                        Image(systemName: "flag")
-                    //                        Text(task.priority?.rawValue ?? "")
-                    //                    }
-                    //                    .font(.subheadline)
-                    //                    .foregroundStyle(.secondary)
-                    
-                    //                    if let dueDate = task.dueDate {
-                    //                        HStack(spacing: 4) {
-                    //                            Image(systemName: "calendar")
-                    //                            Text("Due \(dueDate, format: .dateTime.month(.abbreviated).day())")
-                    //                        }
-                    //                        .font(.subheadline)
-                    //                        .foregroundStyle(.secondary)
-                    //                    }
-                    
                     Spacer()
                 }
                 .padding(.bottom, 10)
@@ -328,4 +429,3 @@ struct TaskRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-

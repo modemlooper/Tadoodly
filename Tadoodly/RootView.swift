@@ -28,6 +28,8 @@ struct ClientsRoute: Hashable {}
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     
+    @Query(filter: #Predicate<UserTask> { $0.isActive == true }) private var activeTasks: [UserTask]
+    
     @State private var notificationManager = NotificationManager.shared
     
     @State private var pathTasks = NavigationPath()
@@ -49,6 +51,9 @@ struct RootView: View {
                     }
                     .navigationDestination(for: AddTaskRoute.self) { route in
                         AddTask(task: route.task, path: $pathTasks)
+                    }
+                    .navigationDestination(for: TaskListType.Kind.self) { kind in
+                        TaskListType(type: kind)
                     }
                     .navigationDestination(for: AddTimeRoute.self) { route in
                         Group {
@@ -199,10 +204,14 @@ struct RootView: View {
         }
         
         if #available(iOS 26.0, *) {
-            tabHost
-                .tabViewBottomAccessory {
-                    TimerBarView()
-                }
+            if activeTasks.isEmpty {
+                tabHost
+            } else {
+                tabHost
+                    .tabViewBottomAccessory {
+                        TimerBarView()
+                    }
+            }
         } else {
             tabHost
         }
@@ -213,4 +222,4 @@ struct RootView: View {
 //    RootView()
 //        .modelContainer(PreviewModels.container)
 //}
-//
+
