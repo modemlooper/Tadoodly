@@ -6,8 +6,42 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2DCF09582FF40058003F8FCD /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DCF09572FF40058003F8FCD /* WidgetKit.framework */; };
+		2DCF095A2FF40058003F8FCD /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DCF09592FF40058003F8FCD /* SwiftUI.framework */; };
+		2DCF096B2FF40059003F8FCD /* TaskWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DCF09552FF40058003F8FCD /* TaskWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2DCF09692FF40059003F8FCD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D2FF7202E6DF1B0001010B8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2DCF09542FF40058003F8FCD;
+			remoteInfo = TaskWidgetExtensionExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2DCF09702FF40059003F8FCD /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2DCF096B2FF40059003F8FCD /* TaskWidgetExtensionExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		2D2FF7282E6DF1B0001010B8 /* Tadoodly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tadoodly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DCF09552FF40058003F8FCD /* TaskWidgetExtensionExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TaskWidgetExtensionExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DCF09572FF40058003F8FCD /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2DCF09592FF40058003F8FCD /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		2DCF098F2FF40199003F8FCD /* TaskWidgetExtensionExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TaskWidgetExtensionExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -15,8 +49,16 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Widgets/TaskWidget.swift,
 			);
 			target = 2D2FF7272E6DF1B0001010B8 /* Tadoodly */;
+		};
+		2DCF098E2FF40128003F8FCD /* Exceptions for "Tadoodly" folder in "TaskWidgetExtensionExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Widgets/TaskWidget.swift,
+			);
+			target = 2DCF09542FF40058003F8FCD /* TaskWidgetExtensionExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -25,6 +67,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				2D2FF7352E6DF1B1001010B8 /* Exceptions for "Tadoodly" folder in "Tadoodly" target */,
+				2DCF098E2FF40128003F8FCD /* Exceptions for "Tadoodly" folder in "TaskWidgetExtensionExtension" target */,
 			);
 			path = Tadoodly;
 			sourceTree = "<group>";
@@ -39,13 +82,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2DCF09522FF40058003F8FCD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DCF095A2FF40058003F8FCD /* SwiftUI.framework in Frameworks */,
+				2DCF09582FF40058003F8FCD /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2D2FF71F2E6DF1B0001010B8 = {
 			isa = PBXGroup;
 			children = (
+				2DCF098F2FF40199003F8FCD /* TaskWidgetExtensionExtension.entitlements */,
 				2D2FF72A2E6DF1B0001010B8 /* Tadoodly */,
+				2DCF09562FF40058003F8FCD /* Frameworks */,
 				2D2FF7292E6DF1B0001010B8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,8 +108,18 @@
 			isa = PBXGroup;
 			children = (
 				2D2FF7282E6DF1B0001010B8 /* Tadoodly.app */,
+				2DCF09552FF40058003F8FCD /* TaskWidgetExtensionExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2DCF09562FF40058003F8FCD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2DCF09572FF40058003F8FCD /* WidgetKit.framework */,
+				2DCF09592FF40058003F8FCD /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -68,10 +132,12 @@
 				2D2FF7242E6DF1B0001010B8 /* Sources */,
 				2D2FF7252E6DF1B0001010B8 /* Frameworks */,
 				2D2FF7262E6DF1B0001010B8 /* Resources */,
+				2DCF09702FF40059003F8FCD /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2DCF096A2FF40059003F8FCD /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2D2FF72A2E6DF1B0001010B8 /* Tadoodly */,
@@ -83,6 +149,25 @@
 			productReference = 2D2FF7282E6DF1B0001010B8 /* Tadoodly.app */;
 			productType = "com.apple.product-type.application";
 		};
+		2DCF09542FF40058003F8FCD /* TaskWidgetExtensionExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2DCF096C2FF40059003F8FCD /* Build configuration list for PBXNativeTarget "TaskWidgetExtensionExtension" */;
+			buildPhases = (
+				2DCF09512FF40058003F8FCD /* Sources */,
+				2DCF09522FF40058003F8FCD /* Frameworks */,
+				2DCF09532FF40058003F8FCD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TaskWidgetExtensionExtension;
+			packageProductDependencies = (
+			);
+			productName = TaskWidgetExtensionExtension;
+			productReference = 2DCF09552FF40058003F8FCD /* TaskWidgetExtensionExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -90,11 +175,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					2D2FF7272E6DF1B0001010B8 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					2DCF09542FF40058003F8FCD = {
+						CreatedOnToolsVersion = 26.6;
 					};
 				};
 			};
@@ -113,12 +201,20 @@
 			projectRoot = "";
 			targets = (
 				2D2FF7272E6DF1B0001010B8 /* Tadoodly */,
+				2DCF09542FF40058003F8FCD /* TaskWidgetExtensionExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		2D2FF7262E6DF1B0001010B8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2DCF09532FF40058003F8FCD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +231,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2DCF09512FF40058003F8FCD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2DCF096A2FF40059003F8FCD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2DCF09542FF40058003F8FCD /* TaskWidgetExtensionExtension */;
+			targetProxy = 2DCF09692FF40059003F8FCD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2D2FF7372E6DF1B1001010B8 /* Debug */ = {
@@ -163,7 +274,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.modemlooper.Tadoodly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -205,7 +316,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.modemlooper.Tadoodly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -343,6 +454,76 @@
 			};
 			name = Release;
 		};
+		2DCF096D2FF40059003F8FCD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TaskWidgetExtensionExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QC3PXZCG98;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaskWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TaskWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.modemlooper.Tadoodly.TaskWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2DCF096E2FF40059003F8FCD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TaskWidgetExtensionExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QC3PXZCG98;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaskWidgetExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TaskWidgetExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.modemlooper.Tadoodly.TaskWidgetExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -360,6 +541,15 @@
 			buildConfigurations = (
 				2D2FF7372E6DF1B1001010B8 /* Debug */,
 				2D2FF7382E6DF1B1001010B8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2DCF096C2FF40059003F8FCD /* Build configuration list for PBXNativeTarget "TaskWidgetExtensionExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2DCF096D2FF40059003F8FCD /* Debug */,
+				2DCF096E2FF40059003F8FCD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

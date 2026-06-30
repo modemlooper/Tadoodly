@@ -170,7 +170,7 @@ struct RootView: View {
         .task {
             // Set the model context for notification handling
             notificationManager.modelContext = modelContext
-            
+
             // Set up navigation callback for notification taps
             notificationManager.onTaskNotificationTapped = { taskId in
                 Task {
@@ -181,26 +181,29 @@ struct RootView: View {
                                 task.id == taskId
                             }
                         )
-                        
+
                         if let tasks = try? modelContext.fetch(descriptor),
                            let task = tasks.first {
                             // Switch to Tasks tab
                             selectedTab = 0
-                            
+
                             // Clear the navigation path and navigate to the task
                             pathTasks = NavigationPath()
-                            
+
                             // Navigate to the task detail
                             pathTasks.append(AddTaskRoute(task: task))
                         }
                     }
-                    
+
                     // Small delay to ensure navigation completes
                     try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 }
             }
-            
+
             await notificationManager.checkIfShouldPromptForPermission()
+        }
+        .onOpenURL { url in
+            handleDeepLink(url)
         }
         
         if #available(iOS 26.0, *) {
@@ -214,6 +217,38 @@ struct RootView: View {
             }
         } else {
             tabHost
+        }
+    }
+}
+
+extension RootView {
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "tadoodly" else { return }
+
+        switch url.host {
+        case "tasks":
+            selectedTab = 0
+            pathTasks = NavigationPath()
+
+        case "task":
+            guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  let idString = components.queryItems?.first(where: { $0.name == "id" })?.value,
+                  let taskId = UUID(uuidString: idString)
+            else { return }
+
+            let descriptor = FetchDescriptor<UserTask>(
+                predicate: #Predicate { $0.id == taskId }
+            )
+            guard let tasks = try? modelContext.fetch(descriptor),
+                  let task = tasks.first
+            else { return }
+
+            selectedTab = 0
+            pathTasks = NavigationPath()
+            pathTasks.append(task)
+
+        default:
+            break
         }
     }
 }

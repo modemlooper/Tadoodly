@@ -358,37 +358,34 @@ struct TaskRow: View {
     private var totalCount: Int { task.taskItems?.count ?? 0 }
     
     var body: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .center) {
             if let project = task.project {
                 Rectangle()
                     .fill((!project.color.isEmpty ? colorFromString(project.color) : Color(.darkGray)))
                     .frame(width: 8)
-                    .padding(.vertical, 0)
                     .opacity(task.completed ? 0.5 : 1)
             } else {
                 Rectangle()
                     .fill(.gray)
                     .frame(width: 8)
-                    .padding(.vertical, 0)
             }
-            
+
             VStack(alignment: .leading, spacing: 8) {
-                
-                HStack(alignment: .top) {
-                    
+
+                HStack {
                     Text(task.title)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .lineLimit(2)
                         .truncationMode(.tail)
-                    
+
                     Spacer()
                     if task.isActive {
                         Image(systemName: "play.circle.fill")
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 HStack(spacing: 14) {
                     
                     Text(task.status?.rawValue ?? "")
@@ -425,6 +422,24 @@ struct TaskRow: View {
             }
             .padding(.horizontal)
             .padding(.top)
+
+            Button {
+                task.completed.toggle()
+                task.updatedAt = Date()
+                if task.completed {
+                    task.status = .done
+                    task.completedAt = Date()
+                } else {
+                    task.status = .todo
+                    task.completedAt = nil
+                }
+            } label: {
+                Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(task.completed ? .green : .secondary)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
