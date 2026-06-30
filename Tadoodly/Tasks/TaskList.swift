@@ -248,6 +248,7 @@ struct TaskList: View {
                         }
                         
                     }
+                    .scrollIndicators(.hidden)
                 }
             }
             .navigationTitle("Tasks")
