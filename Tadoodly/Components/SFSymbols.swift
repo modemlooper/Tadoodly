@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// A basic picker to select an SF Symbol and return its name.
 struct SFSymbolPicker: View {

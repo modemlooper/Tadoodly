@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Tadoodly.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>248A7D130BB18E174619F4710D60426D65DBB796</string>
+				<key>dateExpires</key>
+				<string>9/13/27</string>
+				<key>type</key>
+				<string>Cloud Managed Apple Distribution</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>1</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>248A7D130BB18E174619F4710D60426D65DBB796</string>
+						<key>dateExpires</key>
+						<string>9/13/27</string>
+						<key>type</key>
+						<string>Cloud Managed Apple Distribution</string>
+					</dict>
+					<key>entitlements</key>
+					<dict>
+						<key>application-identifier</key>
+						<string>QC3PXZCG98.com.modemlooper.Tadoodly.TaskWidgetExtension</string>
+						<key>com.apple.developer.team-identifier</key>
+						<string>QC3PXZCG98</string>
+						<key>com.apple.security.application-groups</key>
+						<array>
+							<string>group.com.tadoodly.app</string>
+						</array>
+						<key>get-task-allow</key>
+						<false/>
+					</dict>
+					<key>name</key>
+					<string>TaskWidgetExtensionExtension.appex</string>
+					<key>profile</key>
+					<dict>
+						<key>UUID</key>
+						<string>67a9cc54-07e6-4a12-ae5b-969a045cc986</string>
+						<key>dateExpires</key>
+						<string>9/13/27</string>
+						<key>name</key>
+						<string>iOS Team Ad Hoc Provisioning Profile: com.modemlooper.Tadoodly.TaskWidgetExtension</string>
+					</dict>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>QC3PXZCG98</string>
+						<key>name</key>
+						<string>Ryan Fugate</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>1.0</string>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>QC3PXZCG98.com.modemlooper.Tadoodly</string>
+				<key>aps-environment</key>
+				<string>production</string>
+				<key>com.apple.developer.icloud-container-environment</key>
+				<string>Production</string>
+				<key>com.apple.developer.icloud-container-identifiers</key>
+				<array>
+					<string>iCloud.com.tadoodly.app</string>
+				</array>
+				<key>com.apple.developer.icloud-services</key>
+				<array>
+					<string>CloudKit</string>
+				</array>
+				<key>com.apple.developer.team-identifier</key>
+				<string>QC3PXZCG98</string>
+				<key>com.apple.security.application-groups</key>
+				<array>
+					<string>group.com.tadoodly.app</string>
+				</array>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>Tadoodly.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>acb8b074-0d77-45ce-8dd7-ffc02da25c24</string>
+				<key>dateExpires</key>
+				<string>9/13/27</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: com.modemlooper.Tadoodly</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>QC3PXZCG98</string>
+				<key>name</key>
+				<string>Ryan Fugate</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0.7</string>
+		</dict>
+	</array>
+</dict>
+</plist>

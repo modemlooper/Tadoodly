@@ -84,6 +84,47 @@ struct ProjectPlannerView: View {
                 isInputFocused = true
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .safeAreaInset(edge: .bottom) {
+                HStack {
+                    TextField(model.isGenerating ? "Generating..." : "Describe Project" , text: $model.inputText)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(model.isInputDisabled ? .secondary : .primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
+                        .focused($isInputFocused)
+                        .disabled(model.isGenerating || isInputDisabled)
+
+                    ZStack {
+                        LoadSpinner(isActive: model.isGenerating)
+
+                        Button(action: {
+                            guard !model.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                                return
+                            }
+                            model.title = ""
+                            model.description = ""
+                            isInputFocused = false
+                            isInputDisabled = true
+                            model.tasks = []
+
+                            Task {
+                                await getPlan()
+                            }
+                        }) {
+                            Image(systemName: "sparkles")
+                                .foregroundStyle(model.isGenerating ? .white : .primary)
+                        }
+                        .disabled(model.isGenerating)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(.regularMaterial, in: Capsule())
+                .overlay(Capsule().strokeBorder(.quaternary))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+            }
             .toolbar {
                 
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -162,39 +203,6 @@ struct ProjectPlannerView: View {
                     .disabled(isCreateDisabled || model.isGenerating)
 
                 }
-                
-                ToolbarItemGroup(placement: .bottomBar) {
-                    TextField(model.isGenerating ? "Generating..." : "Describe Project" , text: $model.inputText)
-                        .textFieldStyle(.plain)
-                        .foregroundStyle(model.isInputDisabled ? .secondary : .primary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal)
-                        .focused($isInputFocused)
-                        .disabled(model.isGenerating || isInputDisabled)
-
-                    ZStack {
-                        LoadSpinner(isActive: model.isGenerating)
-
-                        Button(action: {
-                            guard !model.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                                return
-                            }
-                            model.title = ""
-                            model.description = ""
-                            isInputFocused = false
-                            isInputDisabled = true
-                            model.tasks = []
-
-                            Task {
-                                await getPlan()
-                            }
-                        }) {
-                            Image(systemName: "sparkles")
-                                .foregroundStyle(model.isGenerating ? .white : .primary)
-                        }
-                        .disabled(model.isGenerating)
-                    }
-                }
             }
         }
         .background(Color(UIColor.systemBackground))
@@ -207,6 +215,27 @@ struct ProjectPlannerView: View {
     
     
     func getPlan() async {
+        let availability = SystemLanguageModel.default.availability
+        if case .unavailable(let reason) = availability {
+            let message: String
+            switch reason {
+            case .deviceNotEligible:
+                message = "This device doesn't support Apple Intelligence."
+            case .appleIntelligenceNotEnabled:
+                message = "Apple Intelligence is turned off. Enable it in Settings to generate task lists."
+            case .modelNotReady:
+                message = "The on-device model isn't ready yet. It may still be downloading; try again later."
+            @unknown default:
+                message = "The on-device model is unavailable."
+            }
+            await MainActor.run {
+                model.errorMessage = message
+                model.showErrorAlert = true
+                isInputDisabled = false
+            }
+            return
+        }
+
         model.isGenerating = true
         model.partialPlans = []
         do {
@@ -227,7 +256,22 @@ struct ProjectPlannerView: View {
         } catch {
             print("Stream error: \(error)")
             await MainActor.run {
-                model.errorMessage = "Failed to generate response. Please try re-phrasing the prompt."
+                if let genError = error as? LanguageModelSession.GenerationError {
+                    switch genError {
+                    case .guardrailViolation:
+                        model.errorMessage = "That prompt was blocked by the on-device safety filters. Please try re-phrasing it."
+                    case .exceededContextWindowSize:
+                        model.errorMessage = "The prompt is too long. Please shorten it."
+                    case .assetsUnavailable:
+                        model.errorMessage = "The on-device model's assets aren't available. Restart the device or simulator and try again."
+                    case .unsupportedLanguageOrLocale:
+                        model.errorMessage = "This language isn't supported by the on-device model."
+                    default:
+                        model.errorMessage = "The on-device model failed to respond. Try again, or restart the device or simulator."
+                    }
+                } else {
+                    model.errorMessage = "Failed to generate response. Please try again."
+                }
                 model.showErrorAlert = true
             }
         }
